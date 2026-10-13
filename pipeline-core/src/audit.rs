@@ -30,15 +30,8 @@ impl AuditLogger {
         let endpoint = config.otlp_endpoint.trim();
         if endpoint.is_empty() {
             // No OTLP endpoint configured — local tracing only (audit spans are
-            // dropped). This is valid for self-hosted stacks without an OTLP sink.
-            let env_filter = EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"));
-
-            tracing_subscriber::registry()
-                .with(env_filter)
-                .with(fmt::layer().json())
-                .init();
-
+            // dropped). Subscriber is already initialized by init_tracing() in
+            // main.rs; re-initing would panic ("global default already set").
             info!("Audit logger initialized WITHOUT OTLP endpoint (local logging only)");
             let noop = opentelemetry_sdk::trace::TracerProvider::builder()
                 .build()
@@ -60,18 +53,12 @@ impl AuditLogger {
 
         let tracer = provider.tracer(config.service_name.clone());
         global::set_tracer_provider(provider);
-        
-        // Also initialize tracing subscriber for local logging
-        let env_filter = EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info"));
-        
-        tracing_subscriber::registry()
-            .with(env_filter)
-            .with(fmt::layer().json())
-            .init();
-        
-        info!("Audit logger initialized with OTLP endpoint: {}", config.otlp_endpoint);
-        
+
+        // Subscriber is already initialized by init_tracing() in main.rs — do
+        // NOT call .init() again (panics: "a global default trace dispatcher
+        // has already been set").
+        info!("Audit logger initialized with OTLP endpoint: {}", endpoint);
+
         Ok(Self { tracer })
     }
     
