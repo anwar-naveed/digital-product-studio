@@ -40,17 +40,19 @@ RUN apt-get update \
 # Pin + verify upstream craft CLIs (recipe from docs/08-digital-products-pivot.md §7)
 ARG PHOTOCRAFT_VERSION=0.7.0
 ARG VECTORCRAFT_VERSION=0.9.0
+WORKDIR /tmp/clis
 RUN set -eux; \
-    curl -fsSLO "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/SHA256SUMS.txt" || true; \
-    curl -fsSL -o /tmp/photocraft.tar.gz "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz"; \
-    if [ -s SHA256SUMS.txt ]; then grep "photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz" SHA256SUMS.txt | sha256sum -c - || exit 1; fi; \
-    tar -xzf /tmp/photocraft.tar.gz -C /tmp; \
-    install -m 0755 "/tmp/photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64/bin/photocraft-cli" /usr/local/bin/photocraft-cli; \
-    rm -rf /tmp/photocraft* SHA256SUMS.txt; \
-    curl -fsSL -o /tmp/vectorcraft.tar.gz "https://github.com/storytold/vectorcraft/releases/download/v${VECTORCRAFT_VERSION}/vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64.tar.gz"; \
-    tar -xzf /tmp/vectorcraft.tar.gz -C /tmp; \
-    install -m 0755 "/tmp/vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64/bin/vectorcraft-cli" /usr/local/bin/vectorcraft-cli; \
-    rm -rf /tmp/vectorcraft*; \
+    curl -fsSLO "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/SHA256SUMS.txt"; \
+    curl -fsSLO "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    grep "photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz" SHA256SUMS.txt | sha256sum -c -; \
+    tar -xzf "photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    install -m 0755 "photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64/bin/photocraft-cli" /usr/local/bin/photocraft-cli; \
+    curl -fsSLO "https://github.com/storytold/vectorcraft/releases/download/v${VECTORCRAFT_VERSION}/SHA256SUMS.txt"; \
+    curl -fsSLO "https://github.com/storytold/vectorcraft/releases/download/v${VECTORCRAFT_VERSION}/vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    grep "vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64.tar.gz" SHA256SUMS.txt | sha256sum -c -; \
+    tar -xzf "vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    install -m 0755 "vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64/bin/vectorcraft-cli" /usr/local/bin/vectorcraft-cli; \
+    rm -rf /tmp/clis; \
     photocraft-cli --version; \
     vectorcraft-cli --version
 

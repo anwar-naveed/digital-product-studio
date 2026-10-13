@@ -32,7 +32,7 @@ FROM debian:trixie-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
- && addgroup -g 1000 -S appgroup && adduser -S appuser -u 1000 -G appgroup
+ && groupadd -g 1000 appgroup && useradd -u 1000 -g appgroup -s /usr/sbin/nologin appuser
 
 COPY --from=builder /build/target/release/pipeline-core /usr/local/bin/pipeline-core
 

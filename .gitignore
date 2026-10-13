@@ -16,6 +16,11 @@ admin-ui/node_modules/
 secrets/
 
 # test/CI artifacts
+.sqlxprep.log
+admin-ui/.build-output.log
+admin-ui/.npm-install.log
+admin-ui/.vitest-output.log
+*.log
 .docker-test-output.log
 .sqlx-install.log
 .core-check.log
