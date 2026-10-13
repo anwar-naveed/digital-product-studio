@@ -10,23 +10,26 @@ WORKDIR /build
 # sqlx offline cache (committed .sqlx) — no DB needed at image build time
 ENV SQLX_OFFLINE=true
 
-# Build the worker binary (happens on the GitHub-hosted runner only)
-COPY worker/Cargo.toml worker/Cargo.lock* ./worker/
+# Real workspace layout: root manifests + lockfile + sqlx offline cache so macros resolve
+COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx
-COPY pipeline-core/Cargo.toml pipeline-core/Cargo.lock* ./pipeline-core/
-COPY adapters/Cargo.toml adapters/Cargo.lock* ./adapters/
-RUN mkdir -p worker/src pipeline-core/src adapters/src \
- && echo 'pub fn placeholder() {}' > worker/src/lib.rs \
+COPY pipeline-core/Cargo.toml ./pipeline-core/
+COPY adapters/Cargo.toml ./adapters/
+COPY worker/Cargo.toml ./worker/
+
+# Placeholder libs so the dependency layer caches independently of source changes
+RUN mkdir -p pipeline-core/src adapters/src worker/src \
  && echo 'pub fn placeholder() {}' > pipeline-core/src/lib.rs \
- && echo 'pub fn placeholder() {}' > adapters/src/lib.rs
+ && echo 'pub fn placeholder() {}' > adapters/src/lib.rs \
+ && echo 'pub fn placeholder() {}' > worker/src/lib.rs \
+ && echo 'fn main() {}' > worker/src/main.rs
 
-COPY worker/src ./worker/src
-COPY pipeline-core/src ./pipeline-core/src
-COPY adapters/src ./adapters/src
+COPY pipeline-core ./pipeline-core
+COPY adapters ./adapters
+COPY worker ./worker
 
-# Build workspace binary (dummy-lib trick keeps crate graph simple on CI)
-RUN cd worker && cargo build --release || \
-   (cargo build --release --manifest-path worker/Cargo.toml)
+# Build the workspace worker binary (SQLX_OFFLINE + committed .sqlx)
+RUN cargo build --release -p pipeline-worker
 
 # ---- Runtime: craft CLIs + worker binary ----
 FROM debian:trixie-slim
