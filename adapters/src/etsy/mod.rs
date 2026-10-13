@@ -281,7 +281,7 @@ impl EtsyAdapter {
     }
 
     /// Convert Etsy state to ListingState
-    fn etsy_state_to_listing_state(state: &str) -> ListingState {
+    pub fn etsy_state_to_listing_state(state: &str) -> ListingState {
         match state.to_lowercase().as_str() {
             "active" | "published" => ListingState::Live,
             "draft" => ListingState::Draft,

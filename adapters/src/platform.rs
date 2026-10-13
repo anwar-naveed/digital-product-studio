@@ -164,9 +164,10 @@ struct TokenBucket {
 }
 
 impl RateLimiter {
-    /// Test-only accessor for (max_tokens, refill_rate) — used by adapter config tests.
-    #[cfg(test)]
-    pub(crate) fn test_config(&self) -> (f64, f64) {
+    /// Test accessor for (max_tokens, refill_rate) — used by adapter config tests
+    /// (unit + integration). Not part of the stable adapter API.
+    #[doc(hidden)]
+    pub fn test_config(&self) -> (f64, f64) {
         let b = self.inner.blocking_lock();
         (b.max_tokens, b.refill_rate)
     }

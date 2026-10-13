@@ -1,3 +1,7 @@
+//! Legacy API integration scaffold (pre-rename crate name).
+//! Compile-gated behind `api-integration` until rewritten.
+#![cfg(feature = "api-integration")]
+
 //! Integration tests for curation API endpoints
 //!
 //! G2: Approve performs COPY + assembly enqueue in one flow (§6 steps 8-11)

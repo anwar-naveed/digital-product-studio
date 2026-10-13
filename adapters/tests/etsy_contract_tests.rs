@@ -19,7 +19,6 @@ use adapters::platform::{
     PlatformAdapter, Product, UploadFile, ListingPatch, ListingState, VerificationError,
 };
 
-mod common;
 
 #[tokio::test]
 async fn test_etsy_happy_publish() {
@@ -87,7 +86,8 @@ async fn test_etsy_happy_publish() {
     
     // Note: Full integration test would require base_url injection
     // This test verifies the adapter structure and types
-    assert_eq!(adapter.rate_limiter().inner.lock().await.max_tokens, 10.0);
+    let (max_tokens, _refill) = adapter.rate_limiter().test_config();
+    assert_eq!(max_tokens, 10.0);
 }
 
 #[tokio::test]

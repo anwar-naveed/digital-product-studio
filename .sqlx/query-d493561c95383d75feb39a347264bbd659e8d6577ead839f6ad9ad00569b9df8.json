@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO jobs (run_id, tool, command_spec, status, lock_expires_at, attempts)\n            VALUES ($1, 'cf-image-gen', '{}', 'running', now() - interval '10 seconds', 0)\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d493561c95383d75feb39a347264bbd659e8d6577ead839f6ad9ad00569b9df8"
+}

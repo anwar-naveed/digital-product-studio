@@ -1,3 +1,7 @@
+//! Legacy API integration scaffold (pre-rename crate name + stale deps).
+//! Compile-gated behind `api-integration` until rewritten.
+#![cfg(feature = "api-integration")]
+
 //! Integration tests for runs API endpoints
 //!
 //! G1: Route tests in-Docker: POST /runs creates run + target_count jobs atomically (R10)

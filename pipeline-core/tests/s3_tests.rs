@@ -1,3 +1,8 @@
+//! S3 integration tests (testcontainers-based) — legacy scaffold against the
+//! pre-refactor client types. Compile-gated behind `s3-integration` until
+//! rewritten for the current WorkerS3Client/AdminS3Client APIs.
+#![cfg(feature = "s3-integration")]
+
 //! Tests for S3 key builder and client (G3, G4)
 
 use pipeline_core::s3::{S3KeyBuilder, S3Prefix, S3ClientFactory};

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO jobs (run_id, tool, command_spec, status)\n             VALUES ($1, 'cf-image-gen', '{}', 'queued')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6e9d0f4a3b53e0e2b72f77cd010e1577b25c81f98962eadacad25f8952103616"
+}

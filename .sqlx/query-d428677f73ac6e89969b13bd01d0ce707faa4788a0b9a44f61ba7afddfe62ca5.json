@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO jobs (run_id, tool, command_spec, status, attempts)\n             VALUES ($1, 'cf-image-gen', '{}', 'claimed', 1)\n             RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d428677f73ac6e89969b13bd01d0ce707faa4788a0b9a44f61ba7afddfe62ca5"
+}

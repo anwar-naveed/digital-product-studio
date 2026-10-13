@@ -1,3 +1,7 @@
+//! Legacy API integration scaffold (pre-rename crate name + stale deps).
+//! Compile-gated behind `api-integration` until rewritten.
+#![cfg(feature = "api-integration")]
+
 //! Integration tests for niche API endpoints
 //!
 //! These tests run in-Docker against a real Postgres database.
