@@ -111,9 +111,25 @@ impl AuditLogger {
 
 /// Initialize tracing for the application
 pub fn init_tracing(config: &crate::config::TracingConfig) -> Result<()> {
+    let endpoint = config.otlp_endpoint.trim();
+    let env_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new(&config.level));
+
+    if endpoint.is_empty() {
+        // No OTLP endpoint configured — local tracing only. This is valid
+        // for self-hosted stacks without an OTLP sink.
+        tracing_subscriber::registry()
+            .with(env_filter)
+            .with(fmt::layer().json())
+            .init();
+
+        info!("Tracing initialized WITHOUT OTLP endpoint (local logging only)");
+        return Ok(());
+    }
+
     let exporter = SpanExporter::builder()
         .with_tonic()
-        .with_endpoint(&config.otlp_endpoint)
+        .with_endpoint(endpoint)
         .build()
         .map_err(|e| AppError::Internal(format!("OTLP exporter init failed: {e}")))?;
 
@@ -123,15 +139,12 @@ pub fn init_tracing(config: &crate::config::TracingConfig) -> Result<()> {
         .build();
 
     global::set_tracer_provider(tracer_provider);
-    
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(&config.level));
-    
+
     tracing_subscriber::registry()
         .with(env_filter)
         .with(fmt::layer().json())
         .init();
-    
-    info!("Tracing initialized with OTLP endpoint: {}", config.otlp_endpoint);
+
+    info!("Tracing initialized with OTLP endpoint: {}", endpoint);
     Ok(())
 }
