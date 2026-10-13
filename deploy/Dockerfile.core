@@ -1,0 +1,46 @@
+# Dockerfile.core
+# pipeline-core: Rust service. BUILT ONLY BY GITHUB ACTIONS (HARD CLAUSE 2).
+FROM rust:1.99-trixie AS builder
+
+WORKDIR /build
+
+# sqlx offline cache (committed .sqlx) — no DB needed at image build time
+ENV SQLX_OFFLINE=true
+
+# Workspace manifests for dependency caching
+COPY Cargo.toml Cargo.lock* ./
+COPY .sqlx ./.sqlx
+COPY pipeline-core/Cargo.toml ./pipeline-core/
+COPY adapters/Cargo.toml ./adapters/
+COPY worker/Cargo.toml ./worker/
+
+# Placeholder libs so cargo can resolve the workspace before real sources land
+RUN mkdir -p pipeline-core/src adapters/src worker/src tests \
+ && echo 'pub fn placeholder() {}' > pipeline-core/src/lib.rs \
+ && echo 'pub fn placeholder() {}' > adapters/src/lib.rs \
+ && echo 'pub fn placeholder() {}' > worker/src/lib.rs
+
+COPY pipeline-core ./pipeline-core
+COPY adapters ./adapters
+COPY worker ./worker
+
+RUN cargo build --release --bin pipeline-core
+
+# ---- Runtime ----
+FROM debian:trixie-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && addgroup -g 1000 -S appgroup && adduser -S appuser -u 1000 -G appgroup
+
+COPY --from=builder /build/target/release/pipeline-core /usr/local/bin/pipeline-core
+
+USER appuser
+WORKDIR /app
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD /usr/local/bin/pipeline-core --health || exit 1
+
+EXPOSE 8080
+CMD ["pipeline-core"]

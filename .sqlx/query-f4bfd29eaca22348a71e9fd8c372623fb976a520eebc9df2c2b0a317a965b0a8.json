@@ -1,0 +1,126 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, product_id, platform as \"platform: Platform\", platform_listing_id, state as \"state: ListingState\", price, fee_table_id, created_at, updated_at\n            FROM platform_listings\n            WHERE product_id = $1\n            ORDER BY created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "product_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "product_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "platform: Platform",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "platform"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "platform_listing_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "platform_listing_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "price",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "fee_table_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "fee_table_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "f4bfd29eaca22348a71e9fd8c372623fb976a520eebc9df2c2b0a317a965b0a8"
+}

@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT \n            tool as \"tool: JobTool\",\n            status as \"status: JobStatus\",\n            count(*) as count\n        FROM jobs\n        WHERE status IN ('claimed', 'running')\n        GROUP BY tool, status\n        ORDER BY tool, status\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool: JobTool",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "tool"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "status: JobStatus",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "count",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "00d250f1812d82320f0fa54fd7d1bb9a4b9b0a4d303df1fa90a24409778f807a"
+}

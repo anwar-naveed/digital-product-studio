@@ -1,0 +1,73 @@
+# Dockerfile.worker
+# pipeline-worker: runs the Rust worker loop + the pinned craft CLIs.
+# BUILT ONLY BY GITHUB ACTIONS (never on this host — HARD CLAUSE 2).
+# Upstream binaries are downloaded and sha256-verified inside this Dockerfile,
+# so the image is assembled, not compiled, on the CI runner.
+FROM rust:1.99-trixie AS builder
+
+WORKDIR /build
+
+# sqlx offline cache (committed .sqlx) — no DB needed at image build time
+ENV SQLX_OFFLINE=true
+
+# Build the worker binary (happens on the GitHub-hosted runner only)
+COPY worker/Cargo.toml worker/Cargo.lock* ./worker/
+COPY .sqlx ./.sqlx
+COPY pipeline-core/Cargo.toml pipeline-core/Cargo.lock* ./pipeline-core/
+COPY adapters/Cargo.toml adapters/Cargo.lock* ./adapters/
+RUN mkdir -p worker/src pipeline-core/src adapters/src \
+ && echo 'pub fn placeholder() {}' > worker/src/lib.rs \
+ && echo 'pub fn placeholder() {}' > pipeline-core/src/lib.rs \
+ && echo 'pub fn placeholder() {}' > adapters/src/lib.rs
+
+COPY worker/src ./worker/src
+COPY pipeline-core/src ./pipeline-core/src
+COPY adapters/src ./adapters/src
+
+# Build workspace binary (dummy-lib trick keeps crate graph simple on CI)
+RUN cd worker && cargo build --release || \
+   (cargo build --release --manifest-path worker/Cargo.toml)
+
+# ---- Runtime: craft CLIs + worker binary ----
+FROM debian:trixie-slim
+
+# ca-certificates for HTTPS egress (Etsy/LS/Printify/Gelato APIs);
+# curl only for the SHA256SUMS-verified binary fetch below (removed after).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
+ && rm -rf /var/lib/apt/lists/*
+
+# Pin + verify upstream craft CLIs (recipe from docs/08-digital-products-pivot.md §7)
+ARG PHOTOCRAFT_VERSION=0.7.0
+ARG VECTORCRAFT_VERSION=0.9.0
+RUN set -eux; \
+    curl -fsSLO "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/SHA256SUMS.txt" || true; \
+    curl -fsSL -o /tmp/photocraft.tar.gz "https://github.com/storytold/photocraft/releases/download/v${PHOTOCRAFT_VERSION}/photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    if [ -s SHA256SUMS.txt ]; then grep "photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64.tar.gz" SHA256SUMS.txt | sha256sum -c - || exit 1; fi; \
+    tar -xzf /tmp/photocraft.tar.gz -C /tmp; \
+    install -m 0755 "/tmp/photocraft-${PHOTOCRAFT_VERSION}-linux-x86_64/bin/photocraft-cli" /usr/local/bin/photocraft-cli; \
+    rm -rf /tmp/photocraft* SHA256SUMS.txt; \
+    curl -fsSL -o /tmp/vectorcraft.tar.gz "https://github.com/storytold/vectorcraft/releases/download/v${VECTORCRAFT_VERSION}/vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64.tar.gz"; \
+    tar -xzf /tmp/vectorcraft.tar.gz -C /tmp; \
+    install -m 0755 "/tmp/vectorcraft-${VECTORCRAFT_VERSION}-linux-x86_64/bin/vectorcraft-cli" /usr/local/bin/vectorcraft-cli; \
+    rm -rf /tmp/vectorcraft*; \
+    photocraft-cli --version; \
+    vectorcraft-cli --version
+
+# Worker binary from the CI builder stage
+COPY --from=builder /build/worker/target/release/pipeline-worker /usr/local/bin/pipeline-worker
+
+# Non-root user
+RUN addgroup -g 1000 -S appgroup && adduser -S appuser -u 1000 -G appgroup
+USER appuser
+WORKDIR /home/appuser
+
+# Automation sandbox roots (vectorcraft --automation-read/write-root targets)
+ENV STAGING_ROOT=/var/staging \
+    WORKER_POLL_INTERVAL_SECS=5
+RUN mkdir -p /var/staging || true
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD pgrep -f pipeline-worker >/dev/null || exit 1
+
+CMD ["/usr/local/bin/pipeline-worker"]

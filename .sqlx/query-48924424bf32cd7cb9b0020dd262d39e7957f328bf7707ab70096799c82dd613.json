@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, job_id, command_hash, args_hash, exit_code, stdout_sha256, stderr_sha256, output_files, created_at\n            FROM job_receipts\n            WHERE job_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "job_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "command_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "command_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "args_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "args_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "exit_code",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "exit_code"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "stdout_sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "stdout_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "stderr_sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "stderr_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "output_files",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "output_files"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "job_receipts",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "48924424bf32cd7cb9b0020dd262d39e7957f328bf7707ab70096799c82dd613"
+}

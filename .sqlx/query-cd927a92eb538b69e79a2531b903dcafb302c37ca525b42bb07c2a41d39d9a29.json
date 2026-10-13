@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE niches\n        SET name = $1, vertical = $2, demand_signals = $3, competition_score = $4\n        WHERE id = $5\n        RETURNING id, name, vertical, demand_signals, competition_score, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "vertical",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "vertical"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "demand_signals",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "demand_signals"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "competition_score",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "competition_score"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Numeric",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cd927a92eb538b69e79a2531b903dcafb302c37ca525b42bb07c2a41d39d9a29"
+}

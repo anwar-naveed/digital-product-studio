@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO niches (name, vertical, demand_signals, competition_score)\n        VALUES ($1, $2, $3, $4)\n        RETURNING id, name, vertical, demand_signals, competition_score, created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "vertical",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "vertical"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "demand_signals",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "demand_signals"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "competition_score",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "competition_score"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2b90d43984c8299c973350172c8c0abb42f7199854b6327fb1bbe00c153c0e55"
+}

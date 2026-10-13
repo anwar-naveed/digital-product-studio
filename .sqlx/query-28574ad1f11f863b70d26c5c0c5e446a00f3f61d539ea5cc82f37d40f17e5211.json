@@ -1,0 +1,104 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO sales_events (listing_id, event_type, gross, fee, net)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id, listing_id, event_type, gross, fee, net, occurred_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "listing_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "listing_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "event_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "event_type"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "gross",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "gross"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "fee",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "fee"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "net",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "net"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "occurred_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sales_events",
+            "name": "occurred_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Numeric",
+        "Numeric",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "28574ad1f11f863b70d26c5c0c5e446a00f3f61d539ea5cc82f37d40f17e5211"
+}

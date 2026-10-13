@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, listing_id, from_state as \"from_state: ListingState\", to_state as \"to_state: ListingState\", transition_reason, actor_id, created_at\n            FROM listing_states\n            WHERE listing_id = $1\n            ORDER BY created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "listing_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "listing_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "from_state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "from_state"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "to_state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "to_state"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "transition_reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "transition_reason"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "actor_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "e069fbd93588382c9162c40892ae1aefe3291c04b7f84798048594351dbdc0da"
+}

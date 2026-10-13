@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*)\n        FROM design_variants dv\n        LEFT JOIN curations c ON c.variant_id = dv.id\n        WHERE c.decision IS NULL OR c.decision = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "613092a2575ab4a51961d12295d972fe585af5d8d6a817b4348904c9fd62e592"
+}

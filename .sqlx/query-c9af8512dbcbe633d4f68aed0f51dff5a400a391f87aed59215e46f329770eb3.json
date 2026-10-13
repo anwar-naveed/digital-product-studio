@@ -1,0 +1,170 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                pl.id as listing_id,\n                pl.product_id,\n                p.sku as product_sku,\n                p.title as product_title,\n                platform as \"platform: Platform\",\n                pl.platform_listing_id,\n                state as \"state: ListingState\",\n                pl.price as current_price,\n                COALESCE(SUM(CASE WHEN se.event_type = 'view' THEN 1 ELSE 0 END), 0)::bigint as views,\n                COALESCE(SUM(CASE WHEN se.event_type = 'favorite' THEN 1 ELSE 0 END), 0)::bigint as favorites,\n                COALESCE(SUM(CASE WHEN se.event_type = 'sale' THEN 1 ELSE 0 END), 0)::bigint as sales_count,\n                COALESCE(SUM(CASE WHEN se.event_type = 'sale' THEN se.gross ELSE 0 END), 0) as total_revenue,\n                COALESCE(SUM(CASE WHEN se.event_type = 'sale' THEN se.fee ELSE 0 END), 0) as total_fees,\n                COALESCE(SUM(CASE WHEN se.event_type = 'sale' THEN se.net ELSE 0 END), 0) as total_net,\n                MIN(CASE WHEN se.event_type = 'sale' THEN se.occurred_at END) as first_sale_at,\n                MAX(CASE WHEN se.event_type = 'sale' THEN se.occurred_at END) as last_sale_at\n            FROM platform_listings pl\n            INNER JOIN products p ON pl.product_id = p.id\n            LEFT JOIN sales_events se ON pl.id = se.listing_id\n            WHERE pl.platform = $1\n            GROUP BY pl.id, pl.product_id, p.sku, p.title, pl.platform, pl.platform_listing_id, pl.state, pl.price\n            ORDER BY pl.created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "listing_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "product_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "product_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "product_sku",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "products",
+            "name": "sku"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "product_title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "products",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "platform: Platform",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "platform"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "platform_listing_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "platform_listing_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "current_price",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "platform_listings",
+            "name": "price"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "views",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "favorites",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "sales_count",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "total_revenue",
+        "type_info": "Numeric",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "total_fees",
+        "type_info": "Numeric",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "total_net",
+        "type_info": "Numeric",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "first_sale_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "last_sale_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c9af8512dbcbe633d4f68aed0f51dff5a400a391f87aed59215e46f329770eb3"
+}

@@ -1,0 +1,104 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO listing_states (listing_id, from_state, to_state, transition_reason, actor_id)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id, listing_id, from_state as \"from_state: ListingState\", to_state as \"to_state: ListingState\", transition_reason, actor_id, created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "listing_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "listing_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "from_state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "from_state"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "to_state: ListingState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "to_state"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "transition_reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "transition_reason"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "actor_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "listing_states",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "66cff6097c340b2e692dae3a855b4900beebe857cf43d18a9590696bb6107365"
+}

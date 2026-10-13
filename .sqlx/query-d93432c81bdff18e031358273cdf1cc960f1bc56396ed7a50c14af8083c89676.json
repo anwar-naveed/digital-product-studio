@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO curations (variant_id, decision, reviewer_id, decided_at)\n        VALUES ($1, 'approved', $2, $3)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d93432c81bdff18e031358273cdf1cc960f1bc56396ed7a50c14af8083c89676"
+}

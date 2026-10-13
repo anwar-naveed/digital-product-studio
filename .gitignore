@@ -1,0 +1,33 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Node
+node_modules/
+admin-ui/dist/
+admin-ui/node_modules/
+
+# env & secrets
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# test/CI artifacts
+.docker-test-output.log
+.sqlx-install.log
+.core-check.log
+.axum-tree.log
+.sqlxcli.log
+target13/
+target14/
+
+# OS
+.DS_Store
+
+# mempalace + scratch
+mempalace.yaml
+entities.json
+.architect/

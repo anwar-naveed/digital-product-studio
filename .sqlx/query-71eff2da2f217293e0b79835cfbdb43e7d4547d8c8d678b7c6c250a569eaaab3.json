@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT dv.id, dv.design_id, dv.s3_key, dv.sha256, dv.kind,\n               d.run_id, r.niche_id, d.base_prompt, d.s3_prefix_raw\n        FROM design_variants dv\n        JOIN designs d ON dv.design_id = d.id\n        JOIN production_runs r ON d.run_id = r.id\n        WHERE dv.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "design_variants",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "design_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "design_variants",
+            "name": "design_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "s3_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "design_variants",
+            "name": "s3_key"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "design_variants",
+            "name": "sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "design_variants",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "run_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "designs",
+            "name": "run_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "niche_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "production_runs",
+            "name": "niche_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "base_prompt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "designs",
+            "name": "base_prompt"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "s3_prefix_raw",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "designs",
+            "name": "s3_prefix_raw"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "71eff2da2f217293e0b79835cfbdb43e7d4547d8c8d678b7c6c250a569eaaab3"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM processed_webhook_ids\n            WHERE received_at < now() - interval '7 days'\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "906dcdf94a81eaad93a629385a9a1e6632ebde343d48aa8985a91ae86dbe2da2"
+}

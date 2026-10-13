@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT id, name, vertical as \"vertical: NicheVertical\", demand_signals, competition_score, created_at\n                FROM niches\n                WHERE vertical = $1\n                ORDER BY created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "vertical: NicheVertical",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "vertical"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "demand_signals",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "demand_signals"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "competition_score",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "competition_score"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "niches",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "88d7b579fceede0f211ed04863c149ee9345d353373c69c8bb081f37126c522c"
+}
