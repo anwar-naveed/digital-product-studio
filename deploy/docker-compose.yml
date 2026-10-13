@@ -73,7 +73,7 @@ services:
           cpus: "1.0"
           memory: 1g
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\r\n\r\n' >&3 && grep -q OK <&3"]
+      test: ["CMD", "/bin/bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\r\n\r\n' >&3 && grep -q OK <&3"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -137,7 +137,7 @@ services:
     depends_on:
       - pipeline-core
     ports:
-      - "${HOST_BIND_IP:-172.19.0.1}:${UI_PORT:-3081}:8080"
+      - "${HOST_BIND_IP:-172.19.0.1}:${UI_PORT:-3083}:8080"
     user: "1000:1000"
     read_only: true
     cap_drop: ["ALL"]
