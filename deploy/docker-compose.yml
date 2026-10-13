@@ -72,6 +72,12 @@ services:
         limits:
           cpus: "1.0"
           memory: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\r\n\r\n' >&3 && grep -q OK <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     tmpfs:
       - /tmp
 
@@ -116,6 +122,12 @@ services:
           memory: 1g
     volumes:
       - staging:/var/staging
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     tmpfs:
       - /tmp
 
