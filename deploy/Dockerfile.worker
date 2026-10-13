@@ -60,7 +60,7 @@ RUN set -eux; \
     vectorcraft-cli --version
 
 # Worker binary from the CI builder stage
-COPY --from=builder /build/worker/target/release/pipeline-worker /usr/local/bin/pipeline-worker
+COPY --from=builder /build/target/release/pipeline-worker /usr/local/bin/pipeline-worker
 
 # Non-root user
 RUN addgroup -g 1000 -S appgroup && adduser -S appuser -u 1000 -G appgroup
