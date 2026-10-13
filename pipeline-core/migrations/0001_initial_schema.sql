@@ -157,6 +157,20 @@ CREATE INDEX idx_product_items_variant_id ON product_items(variant_id);
 CREATE UNIQUE INDEX idx_product_items_unique ON product_items(product_id, variant_id);
 
 -- ============================================================
+-- 12. FEE_TABLES TABLE
+-- ============================================================
+CREATE TABLE fee_tables (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    platform        text NOT NULL CHECK (platform IN ('etsy', 'lemon_squeezy', 'printify', 'gelato')),
+    rules           jsonb NOT NULL DEFAULT '{}'::jsonb,
+    effective_from  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_fee_tables_platform ON fee_tables(platform);
+CREATE INDEX idx_fee_tables_effective_from ON fee_tables(effective_from DESC);
+
+
+-- ============================================================
 -- 10. PLATFORM_LISTINGS TABLE
 -- ============================================================
 CREATE TABLE platform_listings (
@@ -195,18 +209,6 @@ CREATE INDEX idx_sales_events_listing_id ON sales_events(listing_id);
 CREATE INDEX idx_sales_events_occurred_at ON sales_events(occurred_at DESC);
 CREATE INDEX idx_sales_events_event_type ON sales_events(event_type);
 
--- ============================================================
--- 12. FEE_TABLES TABLE
--- ============================================================
-CREATE TABLE fee_tables (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    platform        text NOT NULL CHECK (platform IN ('etsy', 'lemon_squeezy', 'printify', 'gelato')),
-    rules           jsonb NOT NULL DEFAULT '{}'::jsonb,
-    effective_from  timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_fee_tables_platform ON fee_tables(platform);
-CREATE INDEX idx_fee_tables_effective_from ON fee_tables(effective_from DESC);
 
 -- ============================================================
 -- 13. LISTING_STATES TABLE (audit/history for listing state machine)

@@ -27,10 +27,29 @@ pub struct AuditLogger {
 impl AuditLogger {
     /// Create a new audit logger
     pub async fn new(config: &AuditConfig) -> Result<Self> {
+        let endpoint = config.otlp_endpoint.trim();
+        if endpoint.is_empty() {
+            // No OTLP endpoint configured — local tracing only (audit spans are
+            // dropped). This is valid for self-hosted stacks without an OTLP sink.
+            let env_filter = EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info"));
+
+            tracing_subscriber::registry()
+                .with(env_filter)
+                .with(fmt::layer().json())
+                .init();
+
+            info!("Audit logger initialized WITHOUT OTLP endpoint (local logging only)");
+            let noop = opentelemetry_sdk::trace::TracerProvider::builder()
+                .build()
+                .tracer(config.service_name.clone());
+            return Ok(Self { tracer: noop });
+        }
+
         // Initialize OTLP trace exporter (opentelemetry-otlp 0.27 API)
         let exporter = SpanExporter::builder()
             .with_tonic()
-            .with_endpoint(&config.otlp_endpoint)
+            .with_endpoint(endpoint)
             .build()
             .map_err(|e| AppError::Internal(format!("OTLP exporter init failed: {e}")))?;
 
