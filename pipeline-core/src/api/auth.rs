@@ -49,7 +49,7 @@ pub async fn login(
     }
 
     // Stable UUID derived from the username (deterministic, no table needed).
-    let user_id = Uuid::new_v5(&Uuid::NAMESPACE_URL, &format!("dps-admin:{}", expected_user));
+    let user_id = Uuid::new_v5(&Uuid::NAMESPACE_URL, format!("dps-admin:{}", expected_user).as_bytes());
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as usize)
