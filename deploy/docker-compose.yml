@@ -111,6 +111,7 @@ services:
       APP__TRACING__LEVEL: ${APP__TRACING__LEVEL:-info}
       WORKER_POLL_INTERVAL_SECS: ${WORKER_POLL_INTERVAL_SECS:-5}
       RUST_LOG: ${RUST_LOG:-info,worker=debug}
+      WORKER_JOB_VOLUME: ${WORKER_JOB_VOLUME:-staging}
     user: "1000:1000"
     read_only: true
     cap_drop: ["ALL"]
@@ -125,8 +126,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     group_add:
       - "${DOCKER_GID:-999}"
-    environment:
-      WORKER_JOB_VOLUME: ${WORKER_JOB_VOLUME:-staging}
     healthcheck:
       test: ["CMD-SHELL", "kill -0 1"]
       interval: 30s
