@@ -39,8 +39,9 @@ FROM debian:trixie-slim
 # docker.io CLI only (no daemon) — the worker talks to the host daemon over
 # the mounted socket to spawn hardened sibling job containers (exec.rs).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl xz-utils docker.io \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y ca-certificates curl xz-utils docker.io \
+ && rm -rf /var/lib/apt/lists/* \
+ && docker --version
 
 # Pin + verify upstream craft CLIs (recipe from docs/08-digital-products-pivot.md §7)
 ARG PHOTOCRAFT_VERSION=0.7.0
