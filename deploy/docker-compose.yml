@@ -112,10 +112,6 @@ services:
       WORKER_POLL_INTERVAL_SECS: ${WORKER_POLL_INTERVAL_SECS:-5}
       RUST_LOG: ${RUST_LOG:-info,worker=debug}
       WORKER_JOB_VOLUME: ${WORKER_JOB_VOLUME:-staging}
-    # gid = host docker-socket group (DOCKER_GID, default 983) so the worker
-    # can talk to the daemon socket to spawn sibling job containers; openship's
-    # compose runner does not honor group_add, so primary gid carries it.
-    user: "1000:${DOCKER_GID:-983}"
     read_only: true
     cap_drop: ["ALL"]
     security_opt: ["no-new-privileges:true"]

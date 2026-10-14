@@ -65,8 +65,14 @@ RUN set -eux; \
 # Worker binary from the CI builder stage
 COPY --from=builder /build/target/release/pipeline-worker /usr/local/bin/pipeline-worker
 
-# Non-root user
-RUN groupadd -g 1000 appgroup && useradd -u 1000 -g appgroup -s /usr/sbin/nologin -m appuser
+# Non-root user. Primary gid = DOCKER_GID (default 983 = docker-socket group on
+# the deploy host) so the worker can read /var/run/docker.sock and spawn sibling
+# job containers; openship's compose runner ignores `user:` and `group_add:`,
+# so the gid must come from the image. Override at build time if the host
+# docker group differs.
+ARG DOCKER_GID=983
+RUN groupadd -g ${DOCKER_GID} dockersock \
+ && useradd -u 1000 -g dockersock -s /usr/sbin/nologin -m appuser
 USER appuser
 WORKDIR /home/appuser
 
