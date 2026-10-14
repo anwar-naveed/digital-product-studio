@@ -67,7 +67,7 @@ export function PublishDialog({ productId, productTitle, onSuccess }: PublishDia
     setIsLoadingCredentials(true);
     try {
       const data = await api.settings.credentials();
-      setCredentials(data);
+      setCredentials(data.credentials);
     } catch (err) {
       console.error('Failed to load credentials:', err);
     } finally {

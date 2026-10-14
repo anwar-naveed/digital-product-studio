@@ -89,6 +89,7 @@ pub struct JobSummary {
 /// Run list response
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct RunListResponse {
+    #[serde(rename = "items")]
     pub runs: Vec<RunResponse>,
     pub total: i64,
     pub limit: i64,

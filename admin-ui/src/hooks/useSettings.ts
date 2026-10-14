@@ -13,7 +13,8 @@ export const settingsKeys = {
 export function useCredentials() {
   return useQuery({
     queryKey: settingsKeys.credentials(),
-    queryFn: () => api.settings.credentials(),
+    // Core wraps the list: { credentials: [...] }
+    queryFn: async () => (await api.settings.credentials()).credentials,
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
@@ -33,8 +34,9 @@ export function useUpdateCredential() {
 export function useFeeTables() {
   return useQuery({
     queryKey: settingsKeys.feeTables(),
-    queryFn: () => api.settings.feeTables(),
-    staleTime: 1000 * 60 * 10,
+    // Core wraps the list: { fee_tables: [...] }
+    queryFn: async () => (await api.settings.feeTables()).fee_tables,
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 

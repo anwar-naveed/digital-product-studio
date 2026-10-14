@@ -60,6 +60,7 @@ pub struct ListingAnalyticsResponse {
 /// Analytics list response
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct AnalyticsListResponse {
+    #[serde(rename = "items")]
     pub analytics: Vec<ListingAnalyticsResponse>,
     pub total: i64,
     pub limit: i64,

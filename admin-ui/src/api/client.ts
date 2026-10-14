@@ -297,8 +297,8 @@ export const analyticsApi = {
 
 // Settings API
 export const settingsApi = {
-  credentials: (): Promise<CredentialMetadata[]> =>
-    fetchApi<CredentialMetadata[]>('/settings/credentials'),
+  credentials: (): Promise<{ credentials: CredentialMetadata[]; total: number; limit: number; offset: number }> =>
+    fetchApi<{ credentials: CredentialMetadata[]; total: number; limit: number; offset: number }>('/settings/credentials'),
 
   updateCredential: (platform: Platform, ref: string): Promise<void> =>
     fetchApi<void>(`/settings/credentials/${platform}`, {
@@ -306,8 +306,8 @@ export const settingsApi = {
       body: JSON.stringify({ ref }),
     }),
 
-  feeTables: (): Promise<FeeTableResponse[]> =>
-    fetchApi<FeeTableResponse[]>('/settings/fee-tables'),
+  feeTables: (): Promise<{ fee_tables: FeeTableResponse[]; total: number; limit: number; offset: number }> =>
+    fetchApi<{ fee_tables: FeeTableResponse[]; total: number; limit: number; offset: number }>('/settings/fee-tables'),
 
   updateFeeTable: (platform: Platform, data: UpdateFeeTableRequest): Promise<void> =>
     fetchApi<void>(`/settings/fee-tables/${platform}`, {

@@ -94,6 +94,7 @@ pub struct UpdateProductRequest {
 /// Product list response
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ProductListResponse {
+    #[serde(rename = "items")]
     pub products: Vec<ProductResponse>,
     pub total: i64,
     pub limit: i64,
@@ -454,9 +455,12 @@ impl From<ProductItemRow> for ProductItemResponse {
 /// Router for catalog endpoints
 pub fn catalog_router() -> axum::Router<AppState> {
     axum::Router::new()
-        .route("/", axum::routing::get(list_products).post(create_product))
         .route(
-            "/{id}",
+            "/products",
+            axum::routing::get(list_products).post(create_product),
+        )
+        .route(
+            "/products/{id}",
             axum::routing::get(get_product)
                 .patch(update_product)
                 .delete(delete_product),

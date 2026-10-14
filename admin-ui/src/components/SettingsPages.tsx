@@ -46,7 +46,7 @@ export function SettingsPages() {
     setIsLoadingCredentials(true);
     try {
       const data = await api.settings.credentials();
-      setCredentials(data);
+      setCredentials(data.credentials);
     } catch (err) {
       console.error('Failed to load credentials:', err);
     } finally {
@@ -58,7 +58,7 @@ export function SettingsPages() {
     setIsLoadingFeeTables(true);
     try {
       const data = await api.settings.feeTables();
-      setFeeTables(data);
+      setFeeTables(data.fee_tables);
     } catch (err) {
       console.error('Failed to load fee tables:', err);
     } finally {

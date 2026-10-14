@@ -73,6 +73,7 @@ pub struct UpdateNicheRequest {
 /// Niche list response
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct NicheListResponse {
+    #[serde(rename = "items")]
     pub niches: Vec<NicheResponse>,
     pub total: i64,
     pub limit: i64,
