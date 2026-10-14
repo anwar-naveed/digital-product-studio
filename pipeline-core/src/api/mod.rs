@@ -9,6 +9,7 @@ pub mod catalog;
 pub mod listings;
 pub mod analytics;
 pub mod settings;
+pub mod auth;
 
 pub use niches::niches_router;
 pub use runs::runs_router;
@@ -21,6 +22,7 @@ pub use settings::settings_router;
 /// Combined API router for all v1 endpoints
 pub fn api_router() -> axum::Router<crate::state::AppState> {
     axum::Router::new()
+        .route("/auth/login", axum::routing::post(auth::login))
         .nest("/niches", niches_router())
         .nest("/runs", runs_router())
         .nest("/curation", curation_router())
