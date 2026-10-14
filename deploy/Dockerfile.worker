@@ -35,9 +35,11 @@ RUN cargo build --release -p pipeline-worker
 FROM debian:trixie-slim
 
 # ca-certificates for HTTPS egress (Etsy/LS/Printify/Gelato APIs);
-# curl only for the SHA256SUMS-verified binary fetch below (removed after).
+# curl only for the SHA256SUMS-verified binary fetch below (removed after);
+# docker.io CLI only (no daemon) — the worker talks to the host daemon over
+# the mounted socket to spawn hardened sibling job containers (exec.rs).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
+ && apt-get install -y --no-install-recommends ca-certificates curl xz-utils docker.io \
  && rm -rf /var/lib/apt/lists/*
 
 # Pin + verify upstream craft CLIs (recipe from docs/08-digital-products-pivot.md §7)
@@ -73,6 +75,6 @@ ENV STAGING_ROOT=/var/staging \
 RUN mkdir -p /var/staging || true
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD pgrep -f pipeline-worker >/dev/null || exit 1
+  CMD kill -0 1
 
 CMD ["/usr/local/bin/pipeline-worker"]

@@ -1,0 +1,22 @@
+# Per-tool sandbox images for pipeline job execution (docs/11-architecture.md).
+# BUILT ONLY BY GITHUB ACTIONS (HARD CLAUSE 2). The pinned craft CLIs are
+# downloaded + sha256-verified (H10), then each tool gets its own minimal image
+# so worker-spawned job containers are isolated per-tool.
+ARG RUNTIME_IMAGE=navanwar021/digital-product-studio-worker:latest
+
+FROM ${RUNTIME_IMAGE} AS cli-base
+
+# photocraft-cli:0.7.0 — tag matches the pinned version in worker/src/exec.rs
+FROM cli-base AS photocraft
+USER root
+# Non-root runtime for the job container (matches --user=1000:1000 in exec.rs)
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/photocraft-cli"]
+CMD ["--help"]
+
+# vectorcraft-cli:0.9.0
+FROM cli-base AS vectorcraft
+USER root
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/vectorcraft-cli"]
+CMD ["--help"]

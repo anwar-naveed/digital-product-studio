@@ -117,7 +117,7 @@ async fn write_params_file(job_id: &Uuid, args: &serde_json::Value) -> Result<St
 fn build_container_command(
     job: &Job,
     spec: &pipeline_core::jobspec::JobCommandSpec,
-    params_path: &str,
+    _params_path: &str,
     prepared: &PreparedJob,
 ) -> Result<Vec<String>, ExecutionError> {
     let mut cmd = Vec::new();
@@ -147,18 +147,21 @@ fn build_container_command(
     cmd.push("--tmpfs".to_string());
     cmd.push("/tmp:size=512m,noexec,nosuid,nodev".to_string());
     
-    // Volume mounts
-    // Read-only input mount
+    // Volume mounts — sibling-container model (docker-outside-of-docker via the
+    // mounted daemon socket): -v sources resolve on the DOCKER HOST, so we must
+    // reference the shared named volume by its full name, not container-local paths.
+    // WORKER_JOB_VOLUME carries the compose volume name (e.g.
+    // openship-digital-product-studio-staging); the same volume is mounted at
+    // /workspace inside the worker for local reads/verification.
+    let job_volume = std::env::var("WORKER_JOB_VOLUME")
+        .unwrap_or_else(|_| "staging".to_string());
+
+    // Single shared-volume mount at /workspace. The ro/rw split between inputs
+    // and outputs is enforced one level up by the craft CLIs themselves
+    // (--automation-read-root / --automation-write-root refuse to escape), plus
+    // the container-level sandbox below (read-only rootfs, cap-drop, network none).
     cmd.push("-v".to_string());
-    cmd.push("/workspace/read:/workspace/read:ro".to_string());
-    
-    // Write mount for outputs
-    cmd.push("-v".to_string());
-    cmd.push("/workspace/write:/workspace/write:rw".to_string());
-    
-    // Params file mount
-    cmd.push("-v".to_string());
-    cmd.push(format!("{}:/workspace/params/job-{}.json:ro", params_path, job.id));
+    cmd.push(format!("{}:/workspace:rw", job_volume));
     
     // Network isolation
     cmd.push("--network=none".to_string());
@@ -166,7 +169,7 @@ fn build_container_command(
     // Image name - use pinned versions
     let image = match job.tool {
         JobTool::CfImageGen => "cf-image-gen:0.7.0",
-        JobTool::PhotocraftCli => "photocraft-cli:0.9.0",
+        JobTool::PhotocraftCli => "photocraft-cli:0.7.0",
         JobTool::VectorcraftCli => "vectorcraft-cli:0.9.0",
         JobTool::WebhookProcessor => "webhook-processor:latest",
         JobTool::ProductAssembly => "product-assembly:latest",
