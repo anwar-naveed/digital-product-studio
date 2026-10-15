@@ -67,7 +67,7 @@ pub struct ProductionRun {
 /// Job tool enum - matches CHECK constraint
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "kebab-case")]
-#[sqlx(rename_all = "kebab-case")]
+#[sqlx(rename_all = "kebab-case", type_name = "text")]
 pub enum JobTool {
     #[sqlx(rename = "cf-image-gen")]
     CfImageGen,
@@ -83,10 +83,13 @@ pub enum JobTool {
     PublishListing,
 }
 
-/// Job status enum - matches CHECK constraint and state machine
+/// Job status enum - matches CHECK constraint and state machine.
+/// The DB column is TEXT + CHECK (not a PG enum), so declare TEXT
+/// compatibility explicitly — sqlx otherwise tries to look up a PG
+/// enum type named "job_status" at runtime (TypeNotFound).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
-#[sqlx(rename_all = "snake_case")]
+#[sqlx(rename_all = "snake_case", type_name = "text")]
 pub enum JobStatus {
     Queued,
     Claimed,

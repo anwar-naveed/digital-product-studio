@@ -66,11 +66,22 @@ export class ApiError extends Error {
   }
 }
 
-// Token management
-let authToken: string | null = null;
+// Token management — persisted in sessionStorage so a page refresh keeps
+// the operator logged in within the tab (cleared on tab close, never
+// written to disk or localStorage where it would outlive the session).
+const TOKEN_KEY = 'dps.authToken';
+let authToken: string | null =
+  typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(TOKEN_KEY) : null;
 
 export function setAuthToken(token: string | null): void {
   authToken = token;
+  if (typeof sessionStorage !== 'undefined') {
+    if (token === null) {
+      sessionStorage.removeItem(TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(TOKEN_KEY, token);
+    }
+  }
 }
 
 export function getAuthToken(): string | null {

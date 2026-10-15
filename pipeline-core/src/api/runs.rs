@@ -109,18 +109,38 @@ pub async fn create_run(
 ) -> Result<Json<RunResponse>, AppError> {
     payload.validate()?;
 
-    // Verify niche exists
-    let niche_exists: bool = sqlx::query_scalar!(
-        "SELECT EXISTS(SELECT 1 FROM niches WHERE id = $1)",
+    // Fetch niche (existence + name/vertical for prompt construction)
+    let niche = sqlx::query!(
+        "SELECT name, vertical FROM niches WHERE id = $1",
         payload.niche_id
     )
-    .fetch_one(&state.db)
+    .fetch_optional(&state.db)
     .await?
-    .unwrap_or(false);
+    .ok_or(AppError::NotFound("Niche not found".into()))?;
 
-    if !niche_exists {
-        return Err(AppError::NotFound("Niche not found".into()));
-    }
+    // Prompt seed: params.prompt overrides, else params.prompt_template with
+    // {name}/{vertical} substitution, else a sensible default per niche.
+    let prompt_seed: String = payload
+        .params
+        .get("prompt")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            payload
+                .params
+                .get("prompt_template")
+                .and_then(|v| v.as_str())
+                .map(|t| {
+                    t.replace("{name}", &niche.name)
+                        .replace("{vertical}", &niche.vertical)
+                })
+                .unwrap_or_else(|| {
+                    format!(
+                        "High-quality printable design for the \"{}\" niche ({}),                          variation {{VARIANT}}, clean composition, print-ready aesthetics",
+                        niche.name, niche.vertical
+                    )
+                })
+        });
 
     // Atomic transaction: create run + jobs
     let run_id = Uuid::new_v4();
@@ -178,7 +198,9 @@ pub async fn create_run(
                 "args": {
                     "design_id": design_id,
                     "niche_id": payload.niche_id,
-                    "variant_index": i
+                    "variant_index": i,
+                    "prompt": prompt_seed.replace("{VARIANT}", &format!("variation {}", i + 1)),
+                    "output": format!("{}/{}.png", design_id, i)
                 },
                 "timeout_secs": 300,
                 "expected_outputs": [format!("{}/{}.png", design_id, i)]

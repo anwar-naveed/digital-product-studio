@@ -80,11 +80,15 @@ function NicheDialog({ niche, onClose }: NicheDialogProps) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Vertical</label>
-            <input
+            <select
               {...register('vertical')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
-              placeholder="e.g., wall art, planners, party printables"
-            />
+            >
+              <option value="">Select a vertical…</option>
+              <option value="printable_wall_art">Printable Wall Art</option>
+              <option value="planner_journal_bundles">Planner / Journal Bundles</option>
+              <option value="party_wedding_printables">Party / Wedding Printables</option>
+            </select>
             {errors.vertical && <p className="text-red-500 text-sm mt-1">{errors.vertical.message}</p>}
           </div>
           <div>
