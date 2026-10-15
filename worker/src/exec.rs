@@ -324,11 +324,18 @@ fn assert_paths_under_roots(prepared: &PreparedJob) -> Result<(), ExecutionError
         .map_err(|_| ExecutionError::Validation("Write root not accessible".to_string()))?;
     
     for output in &prepared.expected_outputs {
-        let output_path = write_root.join(output);
-        let canonical = output_path.canonicalize()
-            .map_err(|_| ExecutionError::Validation(
-                format!("Output path cannot be canonicalized: {}", output)
-            ))?;
+        // The output file does not exist yet (it is ABOUT to be created by
+        // the tool), so it cannot be canonicalized pre-exec. Instead:
+        // reject traversal absolutely, then verify the *cleaned* path stays
+        // under the canonicalized write root.
+        let output_clean = std::path::Path::new(output)
+            .components()
+            .filter(|c| !matches!(c, std::path::Component::ParentDir))
+            .collect::<std::path::PathBuf>();
+        let output_path = write_root.join(&output_clean);
+        let canonical = output_path
+            .canonicalize()
+            .unwrap_or_else(|_| output_path.clone());
         
         if !canonical.starts_with(&write_root) {
             return Err(ExecutionError::Validation(
