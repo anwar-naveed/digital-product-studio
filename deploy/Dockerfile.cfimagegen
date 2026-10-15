@@ -8,7 +8,9 @@ COPY cf_image_client.py cf_image_gen_entry.py /usr/local/lib/cf-image-gen/
 RUN chmod +x /usr/local/lib/cf-image-gen/cf_image_gen_entry.py \
  && ln -s /usr/local/lib/cf-image-gen/cf_image_gen_entry.py /usr/local/bin/cf-image-gen
 
-ENV CF_IMAGE_BASE_URL=https://free-image-generation-api.nav-anwar021.workers.dev/v1
+# CF_IMAGE_BASE_URL defaults to the live bridge URL inside cf_image_client.py
+# (wild-snowflake-0e48.nav-anwar021.workers.dev/v1). Override at spawn time
+# via the params file if the bridge ever moves.
 
 USER 1000:1000
 WORKDIR /workspace
