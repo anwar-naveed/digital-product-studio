@@ -65,7 +65,10 @@ services:
       - "${HOST_BIND_IP:-172.19.0.1}:${CORE_PORT:-3082}:8080"
     user: "1000:1000"
     read_only: true
+    # root entrypoint (volume prep) needs CHOWN+SETUID+DAC_OVERRIDE before
+    # gosu drops to appuser; everything else stays dropped.
     cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "SETUID", "DAC_OVERRIDE"]
     security_opt: ["no-new-privileges:true"]
     deploy:
       resources:
@@ -113,7 +116,10 @@ services:
       RUST_LOG: ${RUST_LOG:-info,worker=debug}
       WORKER_JOB_VOLUME: ${WORKER_JOB_VOLUME:-staging}
     read_only: true
+    # root entrypoint (volume prep) needs CHOWN+SETUID+DAC_OVERRIDE before
+    # gosu drops to appuser; everything else stays dropped.
     cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "SETUID", "DAC_OVERRIDE"]
     security_opt: ["no-new-privileges:true"]
     deploy:
       resources:
@@ -141,7 +147,10 @@ services:
       - "${HOST_BIND_IP:-172.19.0.1}:${UI_PORT:-3083}:8080"
     user: "1000:1000"
     read_only: true
+    # root entrypoint (volume prep) needs CHOWN+SETUID+DAC_OVERRIDE before
+    # gosu drops to appuser; everything else stays dropped.
     cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "SETUID", "DAC_OVERRIDE"]
     security_opt: ["no-new-privileges:true"]
     deploy:
       resources:

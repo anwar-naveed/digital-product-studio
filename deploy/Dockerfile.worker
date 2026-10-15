@@ -73,15 +73,29 @@ COPY --from=builder /build/target/release/pipeline-worker /usr/local/bin/pipelin
 ARG DOCKER_GID=983
 RUN groupadd -g ${DOCKER_GID} dockersock \
  && useradd -u 1000 -g dockersock -s /usr/sbin/nologin -m appuser
-USER appuser
+# Entrypoint drops back to appuser via gosu after preparing the volume.
+USER root
 WORKDIR /home/appuser
 
-# Automation sandbox roots (vectorcraft --automation-read/write-root targets)
-ENV STAGING_ROOT=/var/staging \
+# Automation sandbox roots. The staging volume mounts at /workspace; an
+# entrypoint (as root) prepares /workspace/{params,read,write} owned by the
+# runtime uid, then drops privileges to appuser before exec.
+ENV STAGING_ROOT=/workspace \
     WORKER_POLL_INTERVAL_SECS=5
-RUN mkdir -p /var/staging || true
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gosu \
+ && rm -rf /var/lib/apt/lists/* \
+ && printf '%s\n' \
+      '#!/bin/sh' \
+      'set -e' \
+      'mkdir -p /workspace/params /workspace/read /workspace/write' \
+      'chown -R 1000:983 /workspace 2>/dev/null || true' \
+      'exec gosu appuser "$@"' \
+      > /usr/local/bin/entrypoint.sh \
+ && chmod +x /usr/local/bin/entrypoint.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD kill -0 1
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/local/bin/pipeline-worker"]
