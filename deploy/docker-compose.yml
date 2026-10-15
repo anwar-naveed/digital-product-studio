@@ -115,6 +115,7 @@ services:
       WORKER_POLL_INTERVAL_SECS: ${WORKER_POLL_INTERVAL_SECS:-5}
       RUST_LOG: ${RUST_LOG:-info,worker=debug}
       WORKER_JOB_VOLUME: ${WORKER_JOB_VOLUME:-staging}
+      TOOL_IMAGE_PREFIX: ${TOOL_IMAGE_PREFIX:-}
     read_only: true
     # root entrypoint (volume prep) needs CHOWN+SETUID+DAC_OVERRIDE before
     # gosu drops to appuser; everything else stays dropped.

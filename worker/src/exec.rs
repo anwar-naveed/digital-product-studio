@@ -163,17 +163,27 @@ fn build_container_command(
     cmd.push("-v".to_string());
     cmd.push(format!("{}:/workspace:rw", job_volume));
     
-    // Network isolation
-    cmd.push("--network=none".to_string());
+    // Network policy per tool: pure-transform tools get full isolation;
+    // egress tools (image generation via the CF bridge, and the future
+    // publish/webhook jobs that call marketplace APIs) get default egress.
+    let network_mode = match job.tool {
+        JobTool::PhotocraftCli | JobTool::VectorcraftCli | JobTool::ProductAssembly => "none",
+        JobTool::CfImageGen | JobTool::WebhookProcessor | JobTool::PublishListing => "default",
+    };
+    if network_mode == "none" {
+        cmd.push("--network=none".to_string());
+    }
     
-    // Image name - use pinned versions
+    // Image name - pinned versions, namespaced via TOOL_IMAGE_PREFIX
+    // (e.g. "navanwar021/") so CI-published images resolve on the host daemon.
+    let prefix = std::env::var("TOOL_IMAGE_PREFIX").unwrap_or_default();
     let image = match job.tool {
-        JobTool::CfImageGen => "cf-image-gen:0.7.0",
-        JobTool::PhotocraftCli => "photocraft-cli:0.7.0",
-        JobTool::VectorcraftCli => "vectorcraft-cli:0.9.0",
-        JobTool::WebhookProcessor => "webhook-processor:latest",
-        JobTool::ProductAssembly => "product-assembly:latest",
-        JobTool::PublishListing => "publish-listing:latest",
+        JobTool::CfImageGen => format!("{}cf-image-gen:0.7.0", prefix),
+        JobTool::PhotocraftCli => format!("{}photocraft-cli:0.7.0", prefix),
+        JobTool::VectorcraftCli => format!("{}vectorcraft-cli:0.9.0", prefix),
+        JobTool::WebhookProcessor => format!("{}webhook-processor:latest", prefix),
+        JobTool::ProductAssembly => format!("{}product-assembly:latest", prefix),
+        JobTool::PublishListing => format!("{}publish-listing:latest", prefix),
     };
     
     // Build the actual tool command

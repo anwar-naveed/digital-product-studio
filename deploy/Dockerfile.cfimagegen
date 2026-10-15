@@ -1,0 +1,16 @@
+# cf-image-gen sandbox image (Cloudflare Workers AI bridge client).
+# BUILT ONLY BY GITHUB ACTIONS (HARD CLAUSE 2). Stdlib-only Python.
+FROM python:3.12-slim
+
+RUN groupadd -g 1000 appgroup && useradd -u 1000 -g appgroup -s /usr/sbin/nologin -m appuser
+
+COPY cf_image_client.py cf_image_gen_entry.py /usr/local/lib/cf-image-gen/
+RUN chmod +x /usr/local/lib/cf-image-gen/cf_image_gen_entry.py \
+ && ln -s /usr/local/lib/cf-image-gen/cf_image_gen_entry.py /usr/local/bin/cf-image-gen
+
+ENV CF_IMAGE_BASE_URL=https://free-image-generation-api.nav-anwar021.workers.dev/v1
+
+USER 1000:1000
+WORKDIR /workspace
+
+ENTRYPOINT ["/usr/local/bin/cf-image-gen"]
