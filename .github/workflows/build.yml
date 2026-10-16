@@ -129,6 +129,9 @@ jobs:
 
   tools:
     # Tool sandbox images the worker spawns (pinned versions in the tag).
+    # NEEDS worker: the craft CLI images layer on the worker image
+    # (RUNTIME_IMAGE), which must be pushed to work-repo first.
+    needs: [worker]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
