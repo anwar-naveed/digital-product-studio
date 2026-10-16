@@ -1,5 +1,7 @@
 // Runs page component
 import { useRuns } from '../hooks/useRuns';
+import { api } from '../api/client';
+import type { RunVariantItem as RunVariant } from '../types/api';
 import { useCreateRun, useCancelRun } from '../hooks/useRuns';
 import { useNiches } from '../hooks/useNiches';
 import { Card, CardContent } from '../components/ui/Card';
@@ -22,6 +24,54 @@ type RunFormData = z.infer<typeof runSchema>;
 interface RunDialogProps {
   niches: { id: string; name: string }[];
   onClose: () => void;
+}
+
+/** Thumbnail strip of every image generated for a run (live previews). */
+function RunVariantsStrip({ runId }: { runId: string }) {
+  const [variants, setVariants] = useState<RunVariant[] | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const load = async () => {
+    setOpen((o) => !o);
+    if (!variants) {
+      try {
+        const res = await api.runs.variants(runId);
+        setVariants(res.items ?? []);
+      } catch {
+        setVariants([]);
+      }
+    }
+  };
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={load}
+        className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground transition-colors hover:bg-accent"
+      >
+        {open ? 'Hide' : 'Preview'} images
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {variants === null && <LoadingSpinner />}
+          {variants?.length === 0 && (
+            <span className="text-xs text-muted-foreground">
+              No generated images yet for this run.
+            </span>
+          )}
+          {variants?.map((v) => (
+            <a key={v.variant_id} href={v.presigned_url} target="_blank" rel="noreferrer" title={v.s3_key}>
+              <img
+                src={v.presigned_url}
+                alt={`variant ${v.variant_id.slice(0, 8)}`}
+                className="h-16 w-16 rounded-md border border-border object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function RunDialog({ niches, onClose }: RunDialogProps) {
@@ -183,7 +233,8 @@ export function RunsPage() {
                         {run.id.slice(0, 8)}...
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                        {niche?.name ?? run.niche_id.slice(0, 8)}
+                        <div>{niche?.name ?? run.niche_id.slice(0, 8)}</div>
+                        <RunVariantsStrip runId={run.id} />
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[run.status] ?? 'bg-gray-100 text-gray-800'}`}>
@@ -202,7 +253,7 @@ export function RunsPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{formatDateTime(run.created_at)}</td>
                       <td className="px-6 py-4 text-right">
-                        {(run.status === 'pending' || run.status === 'running') && (
+                        {(run.status === 'pending' || run.status === 'generating') && (
                           <button
                             onClick={() => cancelRun.mutate(run.id)}
                             disabled={cancelRun.isPending}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE production_runs\n         SET status = $2,\n             started_at = COALESCE(started_at, now())\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "98684786ea9e97ec73f2cb9f4a9f0f5201e2fb04b8ee68d0812cad4b18d7a105"
+}

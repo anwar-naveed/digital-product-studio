@@ -453,5 +453,65 @@ pub fn runs_router() -> axum::Router<AppState> {
             "/{id}",
             axum::routing::get(get_run),
         )
+        .route("/{id}/variants", axum::routing::get(list_run_variants))
         .route("/{id}/cancel", axum::routing::post(cancel_run))
+}
+
+/// Generated variants for a run, with presigned URLs so the UI can
+/// preview every image the pipeline produced.
+#[derive(serde::Serialize)]
+pub struct RunVariantItem {
+    pub variant_id: uuid::Uuid,
+    pub design_id: uuid::Uuid,
+    pub s3_key: String,
+    pub sha256: String,
+    pub kind: String,
+    pub presigned_url: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(serde::Serialize)]
+pub struct RunVariantsResponse {
+    pub items: Vec<RunVariantItem>,
+    pub total: i64,
+}
+
+#[tracing::instrument(skip(state))]
+async fn list_run_variants(
+    State(state): State<AppState>,
+    Path(id): Path<uuid::Uuid>,
+) -> Result<Json<RunVariantsResponse>, AppError> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT dv.id, dv.design_id, dv.s3_key, dv.sha256, dv.kind, dv.created_at
+        FROM design_variants dv
+        JOIN designs d ON dv.design_id = d.id
+        WHERE d.run_id = $1
+        ORDER BY dv.created_at ASC
+        "#,
+        id
+    )
+    .fetch_all(&state.db)
+    .await?;
+
+    let mut items = Vec::with_capacity(rows.len());
+    for row in rows {
+        let presigned_url = state
+            .s3_client
+            .presign_get(&row.s3_key, std::time::Duration::from_secs(3600))
+            .await
+            .map_err(|e| AppError::Internal(format!("Failed to generate presigned URL: {}", e)))?;
+        items.push(RunVariantItem {
+            variant_id: row.id,
+            design_id: row.design_id,
+            s3_key: row.s3_key,
+            sha256: row.sha256,
+            kind: row.kind,
+            presigned_url,
+            created_at: row.created_at,
+        });
+    }
+
+    let total = items.len() as i64;
+    Ok(Json(RunVariantsResponse { items, total }))
 }

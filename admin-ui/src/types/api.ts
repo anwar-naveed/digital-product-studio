@@ -97,6 +97,21 @@ export interface ListRunsQuery {
 
 export interface RunListResponse extends PaginatedResponse<RunResponse> {}
 
+export interface RunVariantItem {
+  variant_id: string;
+  design_id: string;
+  s3_key: string;
+  sha256: string;
+  kind: string;
+  presigned_url: string;
+  created_at: string;
+}
+
+export interface RunVariantsResponse {
+  items: RunVariantItem[];
+  total: number;
+}
+
 // Curation types
 export interface CurationQueueItem {
   variant_id: string;

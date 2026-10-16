@@ -1,4 +1,5 @@
-// Main Layout with navigation sidebar
+
+  const [theme, toggleTheme] = useTheme();// Main Layout with navigation sidebar
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -16,6 +17,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
 import { cn } from '../lib/utils';
 
 interface NavItem {
@@ -51,13 +54,13 @@ export function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen border-r bg-white dark:bg-gray-800 transition-all duration-200',
+          'fixed left-0 top-0 z-40 h-screen border-r bg-card transition-all duration-200',
           collapsed ? 'w-16' : 'w-64'
         )}
       >
         <div className="flex h-16 items-center justify-between border-b px-4">
           {!collapsed && (
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <span className="text-xl font-bold text-foreground">
               Digital Product Studio
             </span>
           )}
@@ -84,7 +87,7 @@ export function Layout() {
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700',
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                   collapsed && 'justify-center'
                 )
               }
@@ -100,7 +103,7 @@ export function Layout() {
           {!collapsed ? (
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             >
               <LogOut className="h-5 w-5" />
               <span>Logout</span>
@@ -124,13 +127,25 @@ export function Layout() {
           collapsed ? 'ml-16' : 'ml-64'
         )}
       >
-        <header className="sticky top-0 z-30 border-b bg-white/95 dark:bg-gray-800/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
           <div className="flex h-16 items-center justify-between px-6">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-semibold text-foreground">
               Admin Console
             </h1>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <button
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label="Toggle color theme"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-foreground transition-colors hover:bg-accent"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </button>
+              <span className="text-sm text-muted-foreground">
                 Admin User
               </span>
             </div>

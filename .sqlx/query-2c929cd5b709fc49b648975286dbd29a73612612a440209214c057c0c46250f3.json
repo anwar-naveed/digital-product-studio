@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO design_variants (design_id, kind, s3_key, sha256)\n             VALUES ($1, 'raw', $2, $3)\n             ON CONFLICT (sha256) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2c929cd5b709fc49b648975286dbd29a73612612a440209214c057c0c46250f3"
+}

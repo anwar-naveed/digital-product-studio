@@ -14,6 +14,7 @@ import type {
   RunListResponse,
   CreateRunRequest,
   ListRunsQuery,
+  RunVariantsResponse,
   // Curation types
   CurationQueueQuery,
   CurationQueueResponse,
@@ -196,6 +197,9 @@ export const runsApi = {
 
   get: (id: string): Promise<RunDetailResponse> =>
     fetchApi<RunDetailResponse>(`/runs/${id}`),
+
+  variants: (id: string): Promise<RunVariantsResponse> =>
+    fetchApi<RunVariantsResponse>(`/runs/${id}/variants`),
 
   cancel: (id: string): Promise<void> =>
     fetchApi<void>(`/runs/${id}/cancel`, {

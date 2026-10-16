@@ -12,6 +12,9 @@ use tokio::time::{sleep, interval};
 use tracing::{info, warn, error, trace, instrument};
 use uuid::Uuid;
 
+mod exec;
+mod postprocess;
+
 #[derive(Debug, Clone)]
 pub struct WorkerConfig {
     pub lease_seconds: i64,
@@ -39,6 +42,7 @@ impl Default for WorkerConfig {
 pub struct Worker {
     pool: Arc<PgPool>,
     config: WorkerConfig,
+    post: Option<postprocess::PostProcessConfig>,
     // Semaphores for tool concurrency control
     cf_image_gen_permit: Arc<tokio::sync::Semaphore>,
     photocraft_permit: Arc<tokio::sync::Semaphore>,
@@ -46,10 +50,17 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn new(pool: Arc<PgPool>, config: WorkerConfig) -> Self {
+    pub async fn new(pool: Arc<PgPool>, config: WorkerConfig) -> Self {
+        let post = Some(postprocess::PostProcessConfig {
+            staging_root: std::path::PathBuf::from(
+                std::env::var("STAGING_ROOT").unwrap_or_else(|_| "/workspace".into()),
+            ),
+            s3_client: build_s3_client().await,
+        });
         Self {
             pool: pool.clone(),
             config: config.clone(),
+            post,
             cf_image_gen_permit: Arc::new(tokio::sync::Semaphore::new(config.max_cf_image_gen)),
             photocraft_permit: Arc::new(tokio::sync::Semaphore::new(config.max_photocraft)),
             vectorcraft_permit: Arc::new(tokio::sync::Semaphore::new(config.max_vectorcraft)),
@@ -142,12 +153,23 @@ impl Worker {
                 // For now, just mark done
                 let job = pipeline_core::queue::mark_done(&self.pool, job.id).await?;
                 info!("Job {} completed successfully", job.id);
-                
-                // TODO: Create job_receipts entry with receipt data
+
+                // Post-process: ingest outputs to S3 + advance run/design state
+                if let Some(post) = &self.post {
+                    if let Err(e) = postprocess::ingest_design_outputs(&self.pool, post, job.id).await {
+                        warn!("post-process ingest failed for {}: {:?}", job.id, e);
+                    }
+                }
+                if let Err(e) = postprocess::advance_run_status(&self.pool, job.run_id).await {
+                    warn!("run status advance failed for {}: {:?}", job.run_id, e);
+                }
             }
             Err(e) => {
                 error!("Job {} failed: {:?}", job.id, e);
                 let job = pipeline_core::queue::mark_failed(&self.pool, job.id, &e.to_string(), MAX_RETRIES).await?;
+                if let Err(e) = postprocess::advance_run_status(&self.pool, job.run_id).await {
+                    warn!("run status advance failed for {}: {:?}", job.run_id, e);
+                }
                 info!("Job {} marked as failed (attempt {})", job.id, job.attempts);
             }
         }
@@ -206,6 +228,25 @@ async fn main() -> Result<(), AppError> {
     pipeline_core::db::run_migrations(&pool).await?;
 
     // Create and run worker
-    let worker = Worker::new(pool, WorkerConfig::default());
+    let worker = Worker::new(pool, WorkerConfig::default()).await;
     worker.run().await
+}
+
+/// Build the S3 client from environment when all required vars exist.
+async fn build_s3_client() -> Option<pipeline_core::s3::S3Client> {
+    let endpoint = std::env::var("S3_ENDPOINT").ok()?;
+    let bucket = std::env::var("S3_BUCKET").ok()?;
+    let access = std::env::var("S3_ACCESS_KEY").ok()?;
+    let secret = std::env::var("S3_SECRET_KEY").ok()?;
+    let region = std::env::var("APP__S3__REGION").unwrap_or_else(|_| "us-east-1".into());
+    match pipeline_core::s3::S3Client::new(&endpoint, &bucket, &access, &secret, &region).await {
+        Ok(c) => {
+            info!("S3 ingest enabled (bucket {})", bucket);
+            Some(c)
+        }
+        Err(e) => {
+            warn!("S3 ingest disabled (client build failed: {})", e);
+            None
+        }
+    }
 }
