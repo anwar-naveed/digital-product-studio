@@ -1,5 +1,4 @@
-
-  const [theme, toggleTheme] = useTheme();// Main Layout with navigation sidebar
+// Main Layout with navigation sidebar
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -43,6 +42,7 @@ export function Layout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [theme, toggleTheme] = useTheme();
 
   const handleLogout = () => {
     logout();
