@@ -177,13 +177,14 @@ fn build_container_command(
     // Image name - pinned versions, namespaced via TOOL_IMAGE_PREFIX
     // (e.g. "navanwar021/") so CI-published images resolve on the host daemon.
     let prefix = std::env::var("TOOL_IMAGE_PREFIX").unwrap_or_default();
+    // Work-repo tag convention: navanwar021/work-repo:dps-<tool>-<version>.
     let image = match job.tool {
-        JobTool::CfImageGen => format!("{}cf-image-gen:0.7.0", prefix),
-        JobTool::PhotocraftCli => format!("{}photocraft-cli:0.7.0", prefix),
-        JobTool::VectorcraftCli => format!("{}vectorcraft-cli:0.9.0", prefix),
-        JobTool::WebhookProcessor => format!("{}webhook-processor:latest", prefix),
-        JobTool::ProductAssembly => format!("{}product-assembly:latest", prefix),
-        JobTool::PublishListing => format!("{}publish-listing:latest", prefix),
+        JobTool::CfImageGen => format!("{}cf-image-gen-0.7.0", prefix),
+        JobTool::PhotocraftCli => format!("{}photocraft-cli-0.7.0", prefix),
+        JobTool::VectorcraftCli => format!("{}vectorcraft-cli-0.9.0", prefix),
+        JobTool::WebhookProcessor => format!("{}webhook-processor-latest", prefix),
+        JobTool::ProductAssembly => format!("{}product-assembly-latest", prefix),
+        JobTool::PublishListing => format!("{}publish-listing-latest", prefix),
     };
     
     // Build the actual tool command. The tool name is NOT injected as a

@@ -1,8 +1,10 @@
 name: build
 
 # THE ONLY BUILD PIPELINE (HARD CLAUSE 2). All images are built on GitHub-hosted
-# runners and pushed to Docker Hub. This server PULLS images; nothing is ever
-# built locally (HARD CLAUSE 1). The host stays clean at all times (HARD CLAUSE 4).
+# runners and pushed to Docker Hub — to the PRIVATE navanwar021/work-repo
+# monorepo (established convention: one private repo, tag = <service>-<date>-<sha>).
+# This server PULLS images; nothing is ever built locally (HARD CLAUSE 1).
+# Contract: github-actions-build-contract skill + openship-deployment ref 04.
 
 on:
   push:
@@ -16,19 +18,28 @@ on:
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
+concurrency:
+  group: build
+  cancel-in-progress: false
+
 env:
-  REGISTRY: docker.io
-  # Owner/repo set via repo variables so the workflow is fork-friendly
-  IMAGE_PREFIX: ${{ vars.DOCKERHUB_NAMESPACE || github.repository_owner }}
+  IMAGE_REPO: navanwar021/work-repo
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   core:
     runs-on: ubuntu-latest
+    outputs:
+      core_image: ${{ steps.tag.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check secrets
+        run: |
+          [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ] || { echo "::error::DOCKERHUB_TOKEN secret is not set"; exit 1; }
+          [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] || { echo "::error::DOCKERHUB_USER secret is not set"; exit 1; }
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
@@ -36,6 +47,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Compute tag
+        id: tag
+        run: |
+          TAG="dps-core-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
       - name: Build + push pipeline-core
         uses: docker/build-push-action@v6
         with:
@@ -43,13 +60,15 @@ jobs:
           file: deploy/Dockerfile.core
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-core:latest
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-core:${{ github.sha }}
+            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:dps-core-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   worker:
     runs-on: ubuntu-latest
+    outputs:
+      worker_image: ${{ steps.tag.outputs.image }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -59,20 +78,28 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build + push pipeline-worker (with pinned craft CLIs)
+      - name: Compute tag
+        id: tag
+        run: |
+          TAG="dps-worker-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
+      - name: Build + push pipeline-worker
         uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/Dockerfile.worker
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-worker:latest
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-worker:${{ github.sha }}
+            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:dps-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   ui:
     runs-on: ubuntu-latest
+    outputs:
+      ui_image: ${{ steps.tag.outputs.image }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -82,6 +109,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Compute tag
+        id: tag
+        run: |
+          TAG="dps-ui-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
       - name: Build + push admin-ui
         uses: docker/build-push-action@v6
         with:
@@ -89,16 +122,14 @@ jobs:
           file: deploy/Dockerfile.ui
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-ui:latest
-            ${{ env.IMAGE_PREFIX }}/digital-product-studio-ui:${{ github.sha }}
+            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:dps-ui-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   tools:
-    # Per-tool sandbox images (photocraft-cli / vectorcraft-cli) that the worker
-    # spawns as hardened sibling job containers (worker/src/exec.rs).
+    # Tool sandbox images the worker spawns (pinned versions in the tag).
     runs-on: ubuntu-latest
-    needs: [worker]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -108,81 +139,80 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build + push photocraft-cli:0.7.0
+      - name: Build + push photocraft-cli
         uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/Dockerfile.tools
           target: photocraft
           build-args: |
-            RUNTIME_IMAGE=${{ env.IMAGE_PREFIX }}/digital-product-studio-worker:latest
+            RUNTIME_IMAGE=${{ env.IMAGE_REPO }}:dps-worker-latest
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/photocraft-cli:0.7.0
+          tags: ${{ env.IMAGE_REPO }}:dps-photocraft-cli-0.7.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Build + push vectorcraft-cli:0.9.0
+      - name: Build + push vectorcraft-cli
         uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/Dockerfile.tools
           target: vectorcraft
           build-args: |
-            RUNTIME_IMAGE=${{ env.IMAGE_PREFIX }}/digital-product-studio-worker:latest
+            RUNTIME_IMAGE=${{ env.IMAGE_REPO }}:dps-worker-latest
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/vectorcraft-cli:0.9.0
+          tags: ${{ env.IMAGE_REPO }}:dps-vectorcraft-cli-0.9.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  cf-image-gen:
-    # cf-image-gen sandbox image (Cloudflare Workers AI bridge client) that
-    # the worker spawns for image-generation jobs (worker/src/exec.rs).
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build + push cf-image-gen:0.7.0
+      - name: Build + push cf-image-gen
         uses: docker/build-push-action@v6
         with:
           context: deploy
           file: deploy/Dockerfile.cfimagegen
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/cf-image-gen:0.7.0
+          tags: ${{ env.IMAGE_REPO }}:dps-cf-image-gen-0.7.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   test:
     # Runs the test suites INSIDE ephemeral containers (HARD CLAUSE 3)
     runs-on: ubuntu-latest
-    needs: [core, worker]
     steps:
       - uses: actions/checkout@v4
-      - name: Run Rust test suites in a builder container (sqlx offline cache)
+      - name: Rust workspace tests (core + worker)
         run: |
-          docker run --rm \
-            -v "$PWD":/workspace -w /workspace \
-            -e SQLX_OFFLINE=true \
-            rust:1.99-trixie \
-            sh -c "cargo test --workspace --lib"
-      - name: Run admin-ui vitest in a node container
+          docker run --rm -v "$PWD":/ws -w /ws rust:1.99-trixie \
+            sh -c 'cargo test --workspace --lib'
+      - name: Admin UI typecheck + unit tests
         run: |
-          docker run --rm \
-            -v "$PWD/admin-ui":/app -w /app \
-            node:22-bookworm-slim \
-            sh -c "npm install --no-audit --no-fund && npm run test"
+          docker run --rm -v "$PWD/admin-ui":/app -w /app node:22-bookworm-slim \
+            sh -c 'npm ci --no-audit --no-fund && npx tsc --noEmit && npm run test'
 
   release:
-    runs-on: ubuntu-latest
-    needs: [core, worker, ui, tools, cf-image-gen, test]
+    # Pin the freshly built images in .env so openship deploys exactly these.
+    needs: [core, worker, ui, tools, test]
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
-      - name: Release marker
-        run: echo "images pushed for ${{ github.sha }}; server pulls via Openship"
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Update .env with pinned image refs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          sed -i "s|^CORE_IMAGE=.*|CORE_IMAGE=${{ needs.core.outputs.core_image }}|" .env
+          sed -i "s|^WORKER_IMAGE=.*|WORKER_IMAGE=${{ needs.worker.outputs.worker_image }}|" .env
+          sed -i "s|^UI_IMAGE=.*|UI_IMAGE=${{ needs.ui.outputs.ui_image }}|" .env
+          sed -i "s|^TOOL_IMAGE_PREFIX=.*|TOOL_IMAGE_PREFIX=${{ env.IMAGE_REPO }}:dps-|" .env
+          git add .env
+          git commit -m "release: pin images for ${{ github.sha }} [skip ci]" || echo "nothing to commit"
+          git push origin main
+      - name: Summary
+        run: |
+          echo "### Images released to work-repo" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "CORE_IMAGE=${{ needs.core.outputs.core_image }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "WORKER_IMAGE=${{ needs.worker.outputs.worker_image }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "UI_IMAGE=${{ needs.ui.outputs.ui_image }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
