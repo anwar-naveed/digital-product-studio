@@ -60,7 +60,7 @@ jobs:
           file: deploy/Dockerfile.core
           push: true
           tags: |
-            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:${{ steps.tag.outputs.tag }}
             ${{ env.IMAGE_REPO }}:dps-core-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -92,7 +92,7 @@ jobs:
           file: deploy/Dockerfile.worker
           push: true
           tags: |
-            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:${{ steps.tag.outputs.tag }}
             ${{ env.IMAGE_REPO }}:dps-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -124,7 +124,7 @@ jobs:
           file: deploy/Dockerfile.ui
           push: true
           tags: |
-            ${{ steps.tag.outputs.image }}
+            ${{ env.IMAGE_REPO }}:${{ steps.tag.outputs.tag }}
             ${{ env.IMAGE_REPO }}:dps-ui-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
