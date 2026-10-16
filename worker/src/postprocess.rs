@@ -61,7 +61,8 @@ pub async fn ingest_design_outputs(
             continue;
         };
         let sha = sha256_hex(&data);
-        let s3_key = format!("designs/{}/{}", design_id, rel);
+        // rel already carries the design prefix (<design_id>/<variant>.png) — use it as-is.
+        let s3_key = rel.trim_start_matches('/').to_string();
         let mut meta = HashMap::new();
         meta.insert("sha256".to_string(), sha.clone());
         s3.put(&s3_key, data, meta).await?;

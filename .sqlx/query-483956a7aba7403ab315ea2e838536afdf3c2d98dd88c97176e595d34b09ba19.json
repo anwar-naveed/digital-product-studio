@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            dv.id as variant_id,\n            dv.design_id,\n            d.run_id,\n            r.niche_id,\n            dv.s3_key,\n            dv.sha256,\n            dv.kind,\n            d.base_prompt,\n            dv.created_at,\n            c.decision\n        FROM design_variants dv\n        JOIN designs d ON dv.design_id = d.id\n        JOIN production_runs r ON d.run_id = r.id\n        LEFT JOIN curations c ON c.variant_id = dv.id\n        WHERE c.decision IS NULL OR c.decision = $1\n        ORDER BY dv.created_at ASC\n        LIMIT $2 OFFSET $3\n        ",
+  "query": "\n        SELECT \n            dv.id as variant_id,\n            dv.design_id,\n            d.run_id,\n            r.niche_id,\n            dv.s3_key,\n            dv.sha256,\n            dv.kind,\n            d.base_prompt,\n            dv.created_at,\n            c.decision as \"decision: Option<String>\"\n        FROM design_variants dv\n        JOIN designs d ON dv.design_id = d.id\n        JOIN production_runs r ON d.run_id = r.id\n        LEFT JOIN curations c ON c.variant_id = dv.id\n        WHERE c.decision IS NULL OR c.decision = $1\n        ORDER BY dv.created_at ASC\n        LIMIT $2 OFFSET $3\n        ",
   "describe": {
     "columns": [
       {
@@ -104,7 +104,7 @@
       },
       {
         "ordinal": 9,
-        "name": "decision",
+        "name": "decision: Option<String>",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -134,5 +134,5 @@
       false
     ]
   },
-  "hash": "e7910c747a15d8a34ff2ae3122095362810eac3cfbfb479cfcbe18d657a30df6"
+  "hash": "483956a7aba7403ab315ea2e838536afdf3c2d98dd88c97176e595d34b09ba19"
 }

@@ -5,6 +5,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { formatDateTime } from '../lib/utils';
 import { Check, X, Loader2, Image } from 'lucide-react';
 import { useState } from 'react';
+import { assetUrl } from '../api/client';
 
 const REJECT_REASONS = [
   { value: 'style_mismatch', label: 'Style Mismatch' },
@@ -80,7 +81,7 @@ export function CurationPage() {
                 <div key={item.variant_id} className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow">
                   <div className="aspect-square relative bg-gray-100 dark:bg-gray-700">
                     <img
-                      src={item.presigned_url}
+                      src={assetUrl(item.s3_key)}
                       alt={item.base_prompt}
                       className="w-full h-full object-cover"
                       loading="lazy"

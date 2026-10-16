@@ -10,6 +10,7 @@ pub mod listings;
 pub mod analytics;
 pub mod settings;
 pub mod auth;
+pub mod assets;
 
 pub use niches::niches_router;
 pub use runs::runs_router;
@@ -23,6 +24,7 @@ pub use settings::settings_router;
 pub fn api_router() -> axum::Router<crate::state::AppState> {
     axum::Router::new()
         .route("/auth/login", axum::routing::post(auth::login))
+        .route("/assets/{*key}", axum::routing::get(assets::get_asset))
         .nest("/niches", niches_router())
         .nest("/runs", runs_router())
         .nest("/curation", curation_router())

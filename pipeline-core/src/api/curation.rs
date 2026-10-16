@@ -113,7 +113,7 @@ pub async fn get_curation_queue(
             dv.kind,
             d.base_prompt,
             dv.created_at,
-            c.decision
+            c.decision as "decision: Option<String>"
         FROM design_variants dv
         JOIN designs d ON dv.design_id = d.id
         JOIN production_runs r ON d.run_id = r.id

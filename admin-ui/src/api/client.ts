@@ -89,6 +89,16 @@ export function getAuthToken(): string | null {
   return authToken;
 }
 
+/**
+ * URL for an authenticated asset fetch, usable directly in <img src>.
+ * Routes through the API's token-aware /assets endpoint because <img>
+ * cannot send Authorization headers.
+ */
+export function assetUrl(s3Key: string): string {
+  const base = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || '/api/v1';
+  return `${base.replace(/\/$/, '')}/assets/${s3Key}?token=${encodeURIComponent(authToken ?? '')}`;
+}
+
 // Generic fetch wrapper with error handling
 async function fetchApi<T>(
   endpoint: string,

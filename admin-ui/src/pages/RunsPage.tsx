@@ -1,6 +1,6 @@
 // Runs page component
 import { useRuns } from '../hooks/useRuns';
-import { api } from '../api/client';
+import { api, assetUrl } from '../api/client';
 import type { RunVariantItem as RunVariant } from '../types/api';
 import { useCreateRun, useCancelRun } from '../hooks/useRuns';
 import { useNiches } from '../hooks/useNiches';
@@ -60,9 +60,9 @@ function RunVariantsStrip({ runId }: { runId: string }) {
             </span>
           )}
           {variants?.map((v) => (
-            <a key={v.variant_id} href={v.presigned_url} target="_blank" rel="noreferrer" title={v.s3_key}>
+            <a key={v.variant_id} href={assetUrl(v.s3_key)} target="_blank" rel="noreferrer" title={v.s3_key}>
               <img
-                src={v.presigned_url}
+                src={assetUrl(v.s3_key)}
                 alt={`variant ${v.variant_id.slice(0, 8)}`}
                 className="h-16 w-16 rounded-md border border-border object-cover"
               />
