@@ -24,7 +24,6 @@ concurrency:
 
 env:
   IMAGE_REPO: navanwar021/work-repo
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
 permissions:
   contents: write
