@@ -34,20 +34,20 @@ export function AnalyticsPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load analytics</div>;
+    return <div className="text-destructive">Failed to load analytics</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Per-listing performance: views, sales, and margin</p>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground mt-1">Per-listing performance: views, sales, and margin</p>
         </div>
         <select
           value={query.platform}
           onChange={(e) => setQuery({ ...query, platform: e.target.value })}
-          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+          className="px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
         >
           {platformOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -63,8 +63,8 @@ export function AnalyticsPage() {
               <Eye className="h-6 w-6 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Views</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(totalViews)}</p>
+              <p className="text-sm text-muted-foreground">Total Views</p>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(totalViews)}</p>
             </div>
           </CardContent>
         </Card>
@@ -74,8 +74,8 @@ export function AnalyticsPage() {
               <ShoppingCart className="h-6 w-6 text-green-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(totalSales)}</p>
+              <p className="text-sm text-muted-foreground">Total Sales</p>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(totalSales)}</p>
             </div>
           </CardContent>
         </Card>
@@ -85,8 +85,8 @@ export function AnalyticsPage() {
               <DollarSign className="h-6 w-6 text-purple-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalRevenue)}</p>
+              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-2xl font-bold text-foreground">{formatCurrency(totalRevenue)}</p>
             </div>
           </CardContent>
         </Card>
@@ -96,8 +96,8 @@ export function AnalyticsPage() {
               <TrendingDown className="h-6 w-6 text-orange-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Fees</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalFees)}</p>
+              <p className="text-sm text-muted-foreground">Total Fees</p>
+              <p className="text-2xl font-bold text-foreground">{formatCurrency(totalFees)}</p>
             </div>
           </CardContent>
         </Card>
@@ -107,8 +107,8 @@ export function AnalyticsPage() {
               <TrendingUp className="h-6 w-6 text-green-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Net Profit</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalNet)}</p>
+              <p className="text-sm text-muted-foreground">Net Profit</p>
+              <p className="text-2xl font-bold text-foreground">{formatCurrency(totalNet)}</p>
             </div>
           </CardContent>
         </Card>
@@ -120,43 +120,43 @@ export function AnalyticsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-gray-50 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Platform</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">State</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Views</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Favorites</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sales</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revenue</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fees</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Net</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Margin</th>
+                <tr className="border-b bg-muted">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Platform</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">State</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Views</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Favorites</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Sales</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Revenue</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Fees</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Net</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Margin</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {data?.items?.map((item) => (
-                  <tr key={item.listing_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.product_title}</td>
-                    <td className="px-6 py-4 capitalize text-gray-600 dark:text-gray-300">
+                  <tr key={item.listing_id} className="hover:bg-accent">
+                    <td className="px-6 py-4 font-medium text-foreground">{item.product_title}</td>
+                    <td className="px-6 py-4 capitalize text-muted-foreground">
                       {item.platform.replace('-', ' ')}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground dark:bg-gray-700 dark:text-gray-300">
                         {item.state}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">{formatNumber(item.views)}</td>
-                    <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">{formatNumber(item.favorites)}</td>
-                    <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">{formatNumber(item.sales_count)}</td>
-                    <td className="px-6 py-4 text-right text-gray-900 dark:text-white">{formatCurrency(item.total_revenue)}</td>
-                    <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">{formatCurrency(item.total_fees)}</td>
+                    <td className="px-6 py-4 text-right text-muted-foreground">{formatNumber(item.views)}</td>
+                    <td className="px-6 py-4 text-right text-muted-foreground">{formatNumber(item.favorites)}</td>
+                    <td className="px-6 py-4 text-right font-medium text-foreground">{formatNumber(item.sales_count)}</td>
+                    <td className="px-6 py-4 text-right text-foreground">{formatCurrency(item.total_revenue)}</td>
+                    <td className="px-6 py-4 text-right text-muted-foreground">{formatCurrency(item.total_fees)}</td>
                     <td className="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">{formatCurrency(item.total_net)}</td>
-                    <td className="px-6 py-4 text-right text-gray-600 dark:text-gray-300">{parseFloat(item.margin_percent).toFixed(1)}%</td>
+                    <td className="px-6 py-4 text-right text-muted-foreground">{parseFloat(item.margin_percent).toFixed(1)}%</td>
                   </tr>
                 ))}
                 {(!data?.items.length) && (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">
                       No analytics data available yet.
                     </td>
                   </tr>

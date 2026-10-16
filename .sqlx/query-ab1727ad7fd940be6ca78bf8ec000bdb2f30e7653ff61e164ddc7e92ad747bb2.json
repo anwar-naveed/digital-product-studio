@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO platform_credentials (platform, field, encrypted_value, nonce)\n             VALUES ($1, $2, $3, $4)\n             ON CONFLICT (platform, field) DO UPDATE\n             SET encrypted_value = EXCLUDED.encrypted_value,\n                 nonce = EXCLUDED.nonce,\n                 updated_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ab1727ad7fd940be6ca78bf8ec000bdb2f30e7653ff61e164ddc7e92ad747bb2"
+}

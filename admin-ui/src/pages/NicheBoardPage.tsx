@@ -52,39 +52,51 @@ function SpawnRunDialog({ niche, onClose }: SpawnRunDialogProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+      <div className="w-full max-w-md bg-card text-card-foreground rounded-lg shadow-xl p-6 border border-border">
         <div className="mb-4">
-          <h2 className="text-xl font-semibold">Spawn Production Run</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">{niche.name}</p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{niche.vertical}</p>
+          <h2 className="text-xl font-semibold text-foreground">Spawn Production Run</h2>
+          <p className="text-muted-foreground text-sm">{niche.name}</p>
+          <p className="text-muted-foreground text-sm capitalize">{niche.vertical}</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Target Count</label>
+            <label className="block text-sm font-medium mb-1 text-foreground">Target Count</label>
             <input
               {...register('target_count', { valueAsNumber: true })}
               type="number"
               min="1"
               max="100"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="input"
             />
-            {errors.target_count && <p className="text-red-500 text-sm mt-1">{errors.target_count.message}</p>}
+            {errors.target_count && <p className="text-destructive text-sm mt-1">{errors.target_count.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Generation Parameters (JSON)</label>
+            <label className="block text-sm font-medium mb-1 text-foreground">Prompt Template</label>
             <textarea
-              {...register('params', )}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 font-mono text-sm"
-              placeholder='{"style": "gothic", "colorway": "dark", "count": 3}'
+              {...register('params.prompt_template')}
+              rows={3}
+              className="input font-mono text-sm"
+              placeholder={'Beautiful {name} design, {VARIANT} — editable; {name} = niche name, {VARIANT} = per-variant suffix'}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Supports <code className="font-mono">{'{name}'}</code> (niche) and <code className="font-mono">{'{VARIANT}'}</code> (variant suffix).
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground">Style Keywords</label>
+            <input
+              {...register('params.style')}
+              type="text"
+              className="input"
+              placeholder="minimalist, earth tones, high detail (optional)"
             />
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-4 py-2 border rounded-md text-sm hover:bg-accent"
             >
               Cancel
             </button>
@@ -126,14 +138,14 @@ export function NicheBoardPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load niches</div>;
+    return <div className="text-destructive">Failed to load niches</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Niche Board</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Niche Board</h1>
+        <p className="text-muted-foreground mt-1">
           Ranked niches with demand signals — pick a niche to spawn a production run
         </p>
       </div>
@@ -150,32 +162,32 @@ export function NicheBoardPage() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{niche.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{niche.vertical}</p>
+                    <h3 className="font-semibold text-foreground text-lg">{niche.name}</h3>
+                    <p className="text-sm text-muted-foreground capitalize">{niche.vertical}</p>
                   </div>
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-600 dark:text-gray-300">
+                  <span className="px-2 py-1 bg-muted rounded text-xs font-mono text-muted-foreground">
                     #{niche.id.slice(0, 6)}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Search Volume</p>
-                    <p className="font-bold text-gray-900 dark:text-white">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs text-muted-foreground">Search Volume</p>
+                    <p className="font-bold text-foreground">
                       {searchVolume ? formatNumber(searchVolume) : '—'}
                     </p>
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Competition</p>
-                    <p className="font-bold text-gray-900 dark:text-white">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs text-muted-foreground">Competition</p>
+                    <p className="font-bold text-foreground">
                       {competition.toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Trend</p>
-                    <p className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs text-muted-foreground">Trend</p>
+                    <p className="font-bold text-foreground flex items-center gap-1">
                       {trend === 'rising' && <TrendingUp className="h-3 w-3 text-green-500" />}
-                      {trend === 'falling' && <TrendingDown className="h-3 w-3 text-red-500" />}
+                      {trend === 'falling' && <TrendingDown className="h-3 w-3 text-destructive" />}
                       {trend === 'stable' && <Target className="h-3 w-3 text-gray-500" />}
                       <span className="capitalize">{trend ?? '—'}</span>
                     </p>
@@ -205,8 +217,8 @@ export function NicheBoardPage() {
           <Card className="md:col-span-3">
             <CardContent className="p-12 text-center">
               <Target className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">No niches found</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
+              <h3 className="text-lg font-medium text-foreground">No niches found</h3>
+              <p className="text-muted-foreground mt-1">
                 Create niches in the Niches page to see them here.
               </p>
             </CardContent>

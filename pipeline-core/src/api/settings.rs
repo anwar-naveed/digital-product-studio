@@ -58,9 +58,11 @@ pub struct CredentialsListResponse {
 #[derive(Debug, Deserialize, Validate, JsonSchema)]
 pub struct UpsertCredentialsRequest {
     #[validate(length(min = 1))]
-    pub keystring: Option<String>,        // Etsy
+    pub keystring: Option<String>,        // Etsy (from Your Apps)
     #[validate(length(min = 1))]
-    pub access_token: Option<String>,     // Etsy
+    pub shared_secret: Option<String>,    // Etsy (x-api-key = keystring:shared_secret)
+    #[validate(length(min = 1))]
+    pub access_token: Option<String>,     // Etsy OAuth2 (1h expiry)
     #[validate(length(min = 1))]
     pub refresh_token: Option<String>,    // Etsy
     pub expires_at: Option<DateTime<Utc>>,
@@ -116,28 +118,57 @@ pub async fn list_credentials(
     let limit = query.limit.unwrap_or(20).min(100);
     let offset = query.offset.unwrap_or(0);
 
-    // For now, we'll return a static list of platforms with credential status
-    // In a real implementation, this would come from a credentials table
-    let platforms = vec![
-        ("etsy", vec!["keystring", "access_token", "refresh_token", "shop_id", "webhook_secret"]),
-        ("lemon-squeezy", vec!["api_key", "store_id", "webhook_secret"]),
-        ("printify", vec!["api_token", "webhook_secret"]),
+    // Real state from the platform_credentials table (G3: names only, never values).
+    let rows = sqlx::query!(
+        "SELECT platform, field, updated_at
+         FROM platform_credentials
+         ORDER BY platform, field
+         LIMIT $1 OFFSET $2",
+        limit as i64,
+        offset as i64
+    )
+    .fetch_all(&state.db)
+    .await?;
+
+    let expected: Vec<(&str, Vec<&str>)> = vec![
+        ("etsy", vec!["keystring", "shared_secret", "access_token", "refresh_token", "expires_at", "shop_id", "webhook_secret"]),
+        ("lemon_squeezy", vec!["api_key", "store_id", "webhook_secret"]),
+        ("printify", vec!["api_key", "shop_id", "webhook_secret"]),
         ("gelato", vec!["api_key", "webhook_secret"]),
     ];
 
     let mut credentials = Vec::new();
-    for (platform, fields) in platforms {
-        // Check if credentials exist in config (simplified)
-        // In real implementation, query credentials table
+    for (platform, fields) in expected {
+        let stored: Vec<&str> = rows
+            .iter()
+            .filter(|r| r.platform == platform)
+            .map(|r| r.field.as_str())
+            .collect();
+        let latest = rows
+            .iter()
+            .filter(|r| r.platform == platform)
+            .map(|r| r.updated_at)
+            .max();
         credentials.push(CredentialsResponse {
             platform: platform.to_string(),
-            has_credentials: false, // Would check actual storage
-            masked_fields: fields.iter().map(|f| format!("***{}", f)).collect(),
-            updated_at: None,
+            has_credentials: !stored.is_empty(),
+            masked_fields: stored
+                .iter()
+                .map(|f| {
+                    let head: String = f.chars().take(2).collect();
+                    let tail: String = {
+                        let mut t: Vec<char> = f.chars().rev().take(2).collect();
+                        t.reverse();
+                        t.into_iter().collect()
+                    };
+                    format!("***{}**{}***", head, tail)
+                })
+                .collect(),
+            updated_at: latest,
         });
     }
 
-    let total = credentials.len() as i64;
+    let total = credentials.iter().filter(|c| c.has_credentials).count() as i64;
     Ok(Json(CredentialsListResponse {
         credentials,
         total,
@@ -150,24 +181,90 @@ pub async fn list_credentials(
 pub async fn upsert_credentials(
     State(state): State<AppState>,
     _auth: RequireAdmin,
-    Path(platform_str): Path<String>,
+    Path(platform_raw): Path<String>,
     Json(payload): Json<UpsertCredentialsRequest>,
 ) -> Result<Json<UpsertCredentialsResponse>, AppError> {
     payload.validate()?;
 
+    // Accept both canonical snake_case and the UI's hyphenated form.
+    let platform_str = platform_raw.replace('-', "_");
     let platform = match platform_str.as_str() {
         "etsy" => Platform::Etsy,
         "lemon_squeezy" => Platform::LemonSqueezy,
         "printify" => Platform::Printify,
         "gelato" => Platform::Gelato,
-        _ => return Err(AppError::BadRequest("Invalid platform. Must be one of: etsy, lemon_squeezy, printify, gelato".into())),
+        _ => {
+            return Err(AppError::BadRequest(
+                "Invalid platform. Must be one of: etsy, lemon_squeezy, printify, gelato".into(),
+            ))
+        }
     };
 
-    // In a real implementation, this would store credentials securely
-    // For now, we'll store in the config or a dedicated credentials table
-    // The actual storage mechanism depends on the infrastructure
-    
-    // Emit audit event (G3: audit that credentials were updated, but NEVER log the secrets)
+    // AES-256-GCM at rest; fail-closed without a configured key.
+    let cipher = crate::crypto::credentials::CredentialCipher::from_env()
+        .map_err(|e| AppError::Internal(format!("credential storage unavailable: {}", e)))?;
+
+    // Per-platform field whitelist (G3 + platform API docs):
+    //   Etsy Open API v3: keystring, shared_secret (x-api-key pair),
+    //   OAuth2 access/refresh tokens + expiry, shop_id (user id), webhook_secret.
+    //   Lemon Squeezy: api_key (Bearer) + store_id. Printify: api_key + shop_id.
+    //   Gelato: api_key. Webhook secret available for all.
+    let provided: Vec<(&'static str, Option<String>)> = match platform {
+        Platform::Etsy => vec![
+            ("keystring", payload.keystring.clone()),
+            ("shared_secret", payload.shared_secret.clone()),
+            ("access_token", payload.access_token.clone()),
+            ("refresh_token", payload.refresh_token.clone()),
+            ("expires_at", payload.expires_at.map(|d| d.to_rfc3339())),
+            ("shop_id", payload.shop_id.clone()),
+            ("webhook_secret", payload.webhook_secret.clone()),
+        ],
+        Platform::LemonSqueezy => vec![
+            ("api_key", payload.api_key.clone()),
+            ("store_id", payload.store_id.clone()),
+            ("webhook_secret", payload.webhook_secret.clone()),
+        ],
+        Platform::Printify => vec![
+            ("api_key", payload.api_key.clone()),
+            ("shop_id", payload.shop_id.clone()),
+            ("webhook_secret", payload.webhook_secret.clone()),
+        ],
+        Platform::Gelato => vec![
+            ("api_key", payload.api_key.clone()),
+            ("webhook_secret", payload.webhook_secret.clone()),
+        ],
+    };
+
+    let mut stored = 0usize;
+    for (field, value) in provided.into_iter().filter(|(_, v)| v.is_some()) {
+        let value = value.unwrap_or_default();
+        let (nonce, ct) = cipher
+            .seal(&value)
+            .map_err(|e| AppError::Internal(format!("encryption failed: {}", e)))?;
+        sqlx::query!(
+            "INSERT INTO platform_credentials (platform, field, encrypted_value, nonce)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (platform, field) DO UPDATE
+             SET encrypted_value = EXCLUDED.encrypted_value,
+                 nonce = EXCLUDED.nonce,
+                 updated_at = now()",
+            platform_str,
+            field,
+            ct,
+            nonce,
+        )
+        .execute(&state.db)
+        .await?;
+        stored += 1;
+    }
+
+    if stored == 0 {
+        return Err(AppError::BadRequest(
+            "No credential fields provided for this platform".into(),
+        ));
+    }
+
+    // Emit audit event (G3: audit field NAMES only, never the secrets)
     state.audit.log(
         "settings.credentials.updated",
         serde_json::json!({

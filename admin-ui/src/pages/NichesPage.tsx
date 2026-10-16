@@ -66,30 +66,30 @@ function NicheDialog({ niche, onClose }: NicheDialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+      <div className="w-full max-w-md bg-card rounded-lg shadow-xl p-6">
         <h2 className="text-xl font-semibold mb-4">{isEditing ? 'Edit Niche' : 'Create Niche'}</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
             <input
               {...register('name')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
               placeholder="Niche name"
             />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+            {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Vertical</label>
             <select
               {...register('vertical')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
             >
               <option value="">Select a vertical…</option>
               <option value="printable_wall_art">Printable Wall Art</option>
               <option value="planner_journal_bundles">Planner / Journal Bundles</option>
               <option value="party_wedding_printables">Party / Wedding Printables</option>
             </select>
-            {errors.vertical && <p className="text-red-500 text-sm mt-1">{errors.vertical.message}</p>}
+            {errors.vertical && <p className="text-destructive text-sm mt-1">{errors.vertical.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Competition Score</label>
@@ -97,7 +97,7 @@ function NicheDialog({ niche, onClose }: NicheDialogProps) {
               {...register('competition_score')}
               type="number"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
               placeholder="0.0 - 1.0"
             />
           </div>
@@ -105,7 +105,7 @@ function NicheDialog({ niche, onClose }: NicheDialogProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-4 py-2 border rounded-md text-sm hover:bg-accent"
             >
               Cancel
             </button>
@@ -159,15 +159,15 @@ export function NichesPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load niches</div>;
+    return <div className="text-destructive">Failed to load niches</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Niches</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage niche verticals for production runs</p>
+          <h1 className="text-3xl font-bold text-foreground">Niches</h1>
+          <p className="text-muted-foreground mt-1">Manage niche verticals for production runs</p>
         </div>
         <button onClick={handleCreate} className="btn-primary">
           <Plus className="h-4 w-4 mr-2" /> Add Niche
@@ -179,32 +179,32 @@ export function NichesPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-gray-50 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vertical</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Competition</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                <tr className="border-b bg-muted">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vertical</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Competition</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {data?.items.map((niche) => (
-                  <tr key={niche.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{niche.name}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{niche.vertical}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{niche.competition_score}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{formatDate(niche.created_at)}</td>
+                  <tr key={niche.id} className="hover:bg-accent">
+                    <td className="px-6 py-4 font-medium text-foreground">{niche.name}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{niche.vertical}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{niche.competition_score}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{formatDate(niche.created_at)}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(niche)}
-                          className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                          className="p-2 text-gray-500 hover:text-primary hover:bg-accent rounded-md"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(niche.id)}
-                          className="p-2 text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                          className="p-2 text-gray-500 hover:text-destructive hover:bg-accent rounded-md"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -214,7 +214,7 @@ export function NichesPage() {
                 ))}
                 {(!data?.items.length) && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                       No niches found. Create your first niche to get started.
                     </td>
                   </tr>

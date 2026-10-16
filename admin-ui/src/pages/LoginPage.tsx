@@ -29,18 +29,18 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             Digital Product Studio
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-muted-foreground">
             Sign in to the admin console
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
@@ -50,7 +50,7 @@ export function LoginPage() {
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-muted-foreground mb-1">
                 Username
               </label>
               <input
@@ -58,7 +58,7 @@ export function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700 text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter username"
                 required
                 disabled={isLoading || authLoading}
@@ -66,7 +66,7 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-1">
                 Password
               </label>
               <input
@@ -74,7 +74,7 @@ export function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700 text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter password"
                 required
                 disabled={isLoading || authLoading}
@@ -102,7 +102,7 @@ export function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>Demo credentials:</p>
             <p className="font-mono mt-1">admin / admin123</p>
           </div>

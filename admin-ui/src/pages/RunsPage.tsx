@@ -97,22 +97,22 @@ function RunDialog({ niches, onClose }: RunDialogProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+      <div className="w-full max-w-md bg-card text-card-foreground rounded-lg shadow-xl p-6 border border-border">
         <h2 className="text-xl font-semibold mb-4">Spawn Production Run</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Niche</label>
             <select
               {...register('niche_id')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
             >
               <option value="">Select a niche</option>
               {niches.map((niche) => (
                 <option key={niche.id} value={niche.id}>{niche.name}</option>
               ))}
             </select>
-            {errors.niche_id && <p className="text-red-500 text-sm mt-1">{errors.niche_id.message}</p>}
+            {errors.niche_id && <p className="text-destructive text-sm mt-1">{errors.niche_id.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Target Count</label>
@@ -121,24 +121,36 @@ function RunDialog({ niches, onClose }: RunDialogProps) {
               type="number"
               min="1"
               max="1000"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
             />
-            {errors.target_count && <p className="text-red-500 text-sm mt-1">{errors.target_count.message}</p>}
+            {errors.target_count && <p className="text-destructive text-sm mt-1">{errors.target_count.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Parameters (JSON)</label>
+            <label className="block text-sm font-medium mb-1">Prompt Template</label>
             <textarea
-              {...register('params')}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 font-mono text-sm"
-              placeholder='{"style": "gothic", "count": 3}'
+              {...register('params.prompt_template')}
+              rows={3}
+              className="input font-mono text-sm"
+              placeholder={'Beautiful {name} design, {VARIANT} — {name} = niche name, {VARIANT} = per-variant suffix'}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Supports <code className="font-mono">{'{name}'}</code> and <code className="font-mono">{'{VARIANT}'}</code>.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Style Keywords</label>
+            <input
+              {...register('params.style')}
+              type="text"
+              className="input"
+              placeholder="minimalist, earth tones, high detail (optional)"
             />
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-4 py-2 border rounded-md text-sm hover:bg-accent"
             >
               Cancel
             </button>
@@ -170,7 +182,7 @@ const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
   running: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400',
+  cancelled: 'bg-muted text-foreground dark:bg-gray-700 dark:text-gray-400',
   failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
@@ -190,15 +202,15 @@ export function RunsPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load runs</div>;
+    return <div className="text-destructive">Failed to load runs</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Production Runs</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and monitor production runs</p>
+          <h1 className="text-3xl font-bold text-foreground">Production Runs</h1>
+          <p className="text-muted-foreground mt-1">Manage and monitor production runs</p>
         </div>
         <button onClick={() => setShowDialog(true)} className="btn-primary">
           <Plus className="h-4 w-4 mr-2" /> Spawn Run
@@ -210,17 +222,17 @@ export function RunsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-gray-50 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Niche</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Progress</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                <tr className="border-b bg-muted">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Niche</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Target</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Progress</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {data?.items?.map((run) => {
                   const niche = nichesData?.items?.find((n) => n.id === run.niche_id);
                   const totalJobs = run.target_count;
@@ -228,20 +240,20 @@ export function RunsPage() {
                   const progress = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
                   
                   return (
-                    <tr key={run.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-6 py-4 font-mono text-sm text-gray-900 dark:text-white">
+                    <tr key={run.id} className="hover:bg-accent">
+                      <td className="px-6 py-4 font-mono text-sm text-foreground">
                         {run.id.slice(0, 8)}...
                       </td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                      <td className="px-6 py-4 text-muted-foreground">
                         <div>{niche?.name ?? run.niche_id.slice(0, 8)}</div>
                         <RunVariantsStrip runId={run.id} />
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[run.status] ?? 'bg-gray-100 text-gray-800'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[run.status] ?? 'bg-muted text-foreground'}`}>
                           {run.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{formatNumber(run.target_count)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{formatNumber(run.target_count)}</td>
                       <td className="px-6 py-4">
                         <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div
@@ -251,13 +263,13 @@ export function RunsPage() {
                         </div>
                         <span className="text-xs text-gray-500 ml-1">{progress.toFixed(0)}%</span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{formatDateTime(run.created_at)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{formatDateTime(run.created_at)}</td>
                       <td className="px-6 py-4 text-right">
                         {(run.status === 'pending' || run.status === 'generating') && (
                           <button
                             onClick={() => cancelRun.mutate(run.id)}
                             disabled={cancelRun.isPending}
-                            className="p-2 text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md disabled:opacity-50"
+                            className="p-2 text-gray-500 hover:text-destructive hover:bg-accent rounded-md disabled:opacity-50"
                           >
                             <XCircle className="h-4 w-4" />
                           </button>
@@ -268,7 +280,7 @@ export function RunsPage() {
                 })}
                 {(!data?.items?.length) && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                       No runs found. Spawn your first production run to get started.
                     </td>
                   </tr>

@@ -27,6 +27,133 @@ const platformLabels: Record<Platform, string> = {
   gelato: 'Gelato',
 };
 
+/** Per-platform credential fields, grounded in each platform's API docs. */
+interface CredentialField {
+  key: string;
+  label: string;
+  required?: boolean;
+  hint: string;
+  placeholder?: string;
+  type?: 'password' | 'text' | 'datetime-local';
+}
+
+export const credentialFields: Record<Platform, CredentialField[]> = {
+  etsy: [
+    {
+      key: 'keystring',
+      label: 'API Keystring',
+      required: true,
+      hint: 'From Your Apps on developers.etsy.com. Sent as x-api-key on EVERY request.',
+      placeholder: '1aa2bb33c44d55eeeeee6fff',
+    },
+    {
+      key: 'shared_secret',
+      label: 'Shared Secret',
+      required: true,
+      hint: 'Paired with the keystring: x-api-key = keystring:shared_secret.',
+    },
+    {
+      key: 'access_token',
+      label: 'OAuth2 Access Token',
+      required: true,
+      hint: 'From the OAuth2 authorization-code flow. Expires in 1 HOUR — the pipeline refreshes via the refresh token.',
+      type: 'password',
+    },
+    {
+      key: 'refresh_token',
+      label: 'OAuth2 Refresh Token',
+      required: true,
+      hint: 'Comes with the access token. Valid 90 days; used to mint new access tokens.',
+      type: 'password',
+    },
+    {
+      key: 'expires_at',
+      label: 'Access Token Expiry',
+      hint: 'RFC3339 timestamp of the access token expiry (e.g. 2026-10-16T12:00:00Z). Optional.',
+      type: 'datetime-local',
+    },
+    {
+      key: 'shop_id',
+      label: 'Shop ID',
+      required: true,
+      hint: 'The shop owner\u2019s user ID (getMe → user_id). Required for listing/shop endpoints.',
+      placeholder: '12345678',
+    },
+    {
+      key: 'webhook_secret',
+      label: 'Webhook Secret',
+      hint: 'Optional shared secret to verify incoming Etsy webhook payloads.',
+      type: 'password',
+    },
+  ],
+  'lemon-squeezy': [
+    {
+      key: 'api_key',
+      label: 'API Key',
+      required: true,
+      hint: 'Settings → API → Create API key on lemonsqueezy.com. Sent as Authorization: Bearer.',
+      type: 'password',
+    },
+    {
+      key: 'store_id',
+      label: 'Store ID',
+      required: true,
+      hint: 'Store ID from the dashboard (Settings → Stores) — used for product/create-checkout endpoints.',
+      placeholder: '147852',
+    },
+    {
+      key: 'webhook_secret',
+      label: 'Webhook Signing Secret',
+      hint: 'Settings → Webhooks → signing secret (X-Signature on events). Optional.',
+      type: 'password',
+    },
+  ],
+  printify: [
+    {
+      key: 'api_key',
+      label: 'API Token',
+      required: true,
+      hint: 'Personal access token from Printify → My Profile → Connections. Sent as Bearer token.',
+      type: 'password',
+    },
+    {
+      key: 'shop_id',
+      label: 'Shop ID',
+      required: true,
+      hint: 'Numeric shop ID from GET /v1/shops.json — publish endpoints require it.',
+      placeholder: '1234567',
+    },
+    {
+      key: 'webhook_secret',
+      label: 'Webhook Secret',
+      hint: 'Optional secret for verifying Printify webhook payloads.',
+      type: 'password',
+    },
+  ],
+  gelato: [
+    {
+      key: 'api_key',
+      label: 'API Key',
+      required: true,
+      hint: 'Generated in the Gelato dashboard → Developer → API keys. Sent on every request.',
+      type: 'password',
+    },
+    {
+      key: 'webhook_secret',
+      label: 'Webhook Secret',
+      hint: 'Optional secret for verifying Gelato order-webhook payloads.',
+      type: 'password',
+    },
+  ],
+};
+
+const platformDocs: Record<Platform, string> = {
+  etsy: 'https://developers.etsy.com/documentation/essentials/authentication',
+  'lemon-squeezy': 'https://docs.lemonsqueezy.com/api',
+  printify: 'https://developers.printify.com/',
+  gelato: 'https://dashboard.gelato.com/docs/',
+};
+
 export function SettingsPages() {
   const [activeTab, setActiveTab] = useState<'credentials' | 'fee-tables' | 'webhooks'>('credentials');
   const [credentials, setCredentials] = useState<CredentialMetadata[]>([]);
@@ -34,7 +161,7 @@ export function SettingsPages() {
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
   const [isLoadingFeeTables, setIsLoadingFeeTables] = useState(true);
   const [showCredentialDialog, setShowCredentialDialog] = useState<Platform | null>(null);
-  const [credentialRef, setCredentialRef] = useState('');
+  const [credentialValues, setCredentialValues] = useState<Record<string, string>>({});
   const [isUpdatingCredential, setIsUpdatingCredential] = useState(false);
   const [credentialError, setCredentialError] = useState<string | null>(null);
   const [showFeeTableDialog, setShowFeeTableDialog] = useState<Platform | null>(null);
@@ -75,10 +202,24 @@ export function SettingsPages() {
     setIsUpdatingCredential(true);
     setCredentialError(null);
     try {
-      await api.settings.updateCredential(platform, credentialRef);
+      // Only send non-empty fields (partial updates supported per platform).
+      const payload: Record<string, string> = {};
+      for (const field of credentialFields[platform]) {
+        const v = (credentialValues[field.key] ?? '').trim();
+        if (v) payload[field.key] = v;
+      }
+      const required = credentialFields[platform].filter((f) => f.required);
+      const missing = required.filter((f) => !payload[f.key]);
+      if (required.length > 0 && missing.length === required.length) {
+        throw new Error('Provide at least the required fields for this platform');
+      }
+      if (Object.keys(payload).length === 0) {
+        throw new Error('No fields filled in');
+      }
+      await api.settings.updateCredential(platform, payload);
       loadCredentials();
       setShowCredentialDialog(null);
-      setCredentialRef('');
+      setCredentialValues({});
     } catch (err: any) {
       setCredentialError(err.message ?? 'Failed to update credential');
     } finally {
@@ -107,8 +248,7 @@ export function SettingsPages() {
   };
 
   const openCredentialDialog = (platform: Platform) => {
-    const cred = credentials.find(c => c.platform === platform);
-    setCredentialRef(cred ? 'op://...' : '');
+    setCredentialValues({});
     setShowCredentialDialog(platform);
   };
 
@@ -209,37 +349,50 @@ export function SettingsPages() {
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>
-                        {platformLabels[showCredentialDialog]} Credential Reference
+                        {platformLabels[showCredentialDialog]} API Credentials
                       </DialogTitle>
                       <DialogDescription>
-                        Enter the 1Password reference (op://vault/item/field) for this platform's credentials.
-                        The actual secret values are never stored in this application.
+                        Fields below match how {platformLabels[showCredentialDialog]}{'}'}s API
+                        actually authenticates. Values are encrypted (AES-256-GCM) before
+                        storage and are never returned by the API.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-1">
                       {credentialError && (
                         <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md" role="alert">
                           {credentialError}
                         </div>
                       )}
-                      <div className="space-y-2">
-                        <label htmlFor="credential_ref" className="text-sm font-medium">
-                          1Password Reference <span className="text-destructive">*</span>
-                        </label>
-                        <Input
-                          id="credential_ref"
-                          value={credentialRef}
-                          onChange={(e) => setCredentialRef(e.target.value)}
-                          placeholder="op://vault/item/field"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Format: op://vault-name/item-name/field-name
-                        The secret value is fetched at runtime and never persisted here.
-                      </p>
+                      {credentialFields[showCredentialDialog].map((field) => (
+                        <div key={field.key} className="space-y-1.5">
+                          <label htmlFor={`cred-${field.key}`} className="text-sm font-medium">
+                            {field.label}{' '}
+                            {field.required && <span className="text-destructive">*</span>}
+                          </label>
+                          <Input
+                            id={`cred-${field.key}`}
+                            type={field.type === 'password' ? 'password' : 'text'}
+                            value={credentialValues[field.key] ?? ''}
+                            onChange={(e) =>
+                              setCredentialValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                            }
+                            placeholder={field.placeholder ?? ''}
+                            autoComplete="off"
+                          />
+                          <p className="text-xs text-muted-foreground">{field.hint}</p>
+                        </div>
+                      ))}
+                      <a
+                        href={platformDocs[showCredentialDialog]}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        Where do I find these? — official {platformLabels[showCredentialDialog]} API docs
+                      </a>
                     </div>
                     <DialogFooter className="gap-2">
-                      <Button variant="outline" onClick={() => { setShowCredentialDialog(null); setCredentialRef(''); }}>
+                      <Button variant="outline" onClick={() => { setShowCredentialDialog(null); setCredentialValues({}); }}>
                         Cancel
                       </Button>
                       <Button onClick={() => handleUpdateCredential(showCredentialDialog!)} disabled={isUpdatingCredential}>

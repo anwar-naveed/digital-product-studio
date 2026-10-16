@@ -325,10 +325,10 @@ export const settingsApi = {
   credentials: (): Promise<{ credentials: CredentialMetadata[]; total: number; limit: number; offset: number }> =>
     fetchApi<{ credentials: CredentialMetadata[]; total: number; limit: number; offset: number }>('/settings/credentials'),
 
-  updateCredential: (platform: Platform, ref: string): Promise<void> =>
+  updateCredential: (platform: Platform, fields: Record<string, string>): Promise<void> =>
     fetchApi<void>(`/settings/credentials/${platform}`, {
       method: 'PUT',
-      body: JSON.stringify({ ref }),
+      body: JSON.stringify(fields),
     }),
 
   feeTables: (): Promise<{ fee_tables: FeeTableResponse[]; total: number; limit: number; offset: number }> =>

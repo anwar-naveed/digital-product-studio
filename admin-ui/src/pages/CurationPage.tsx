@@ -53,14 +53,14 @@ export function CurationPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load curation queue</div>;
+    return <div className="text-destructive">Failed to load curation queue</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Curation Queue</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Curation Queue</h1>
+        <p className="text-muted-foreground mt-1">
           Review and approve/reject generated design variants
         </p>
       </div>
@@ -70,16 +70,16 @@ export function CurationPage() {
           {data?.items?.length === 0 ? (
             <div className="p-12 text-center">
               <Image className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">No items in queue</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
+              <h3 className="text-lg font-medium text-foreground">No items in queue</h3>
+              <p className="text-muted-foreground mt-1">
                 All variants have been reviewed. Spawn a new production run to generate more.
               </p>
             </div>
           ) : (
             <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {data?.items?.map((item) => (
-                <div key={item.variant_id} className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow">
-                  <div className="aspect-square relative bg-gray-100 dark:bg-gray-700">
+                <div key={item.variant_id} className="border rounded-lg overflow-hidden bg-card hover:shadow-md transition-shadow">
+                  <div className="aspect-square relative bg-muted">
                     <img
                       src={assetUrl(item.s3_key)}
                       alt={item.base_prompt}
@@ -91,11 +91,11 @@ export function CurationPage() {
                     </div>
                   </div>
                   <div className="p-4 space-y-3">
-                    <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                    <h4 className="font-medium text-foreground truncate">
                       {item.base_prompt.slice(0, 50)}...
                     </h4>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="px-2 py-0.5 bg-muted rounded">
                         {item.kind}
                       </span>
                       <span>{formatDateTime(item.created_at)}</span>
@@ -134,14 +134,14 @@ export function CurationPage() {
       {/* Reject Dialog */}
       {selectedVariant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+          <div className="w-full max-w-md bg-card rounded-lg shadow-xl p-6">
             <h2 className="text-xl font-semibold mb-4">Reject Variant</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               Select a reason for rejection:
             </p>
             <div className="space-y-2 mb-6">
               {REJECT_REASONS.map((reason) => (
-                <label key={reason.value} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <label key={reason.value} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-accent">
                   <input
                     type="radio"
                     name="reject_reason"
@@ -150,14 +150,14 @@ export function CurationPage() {
                     onChange={() => setSelectedVariant({ ...selectedVariant, rejectReason: reason.value })}
                     className="text-primary"
                   />
-                  <span className="text-gray-900 dark:text-white">{reason.label}</span>
+                  <span className="text-foreground">{reason.label}</span>
                 </label>
               ))}
             </div>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setSelectedVariant(null)}
-                className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-4 py-2 border rounded-md text-sm hover:bg-accent"
               >
                 Cancel
               </button>

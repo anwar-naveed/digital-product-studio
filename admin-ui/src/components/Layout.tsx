@@ -50,7 +50,7 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside
         className={cn(
@@ -66,7 +66,7 @@ export function Layout() {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 rounded-md text-muted-foreground hover:bg-muted dark:hover:bg-muted"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
@@ -111,7 +111,7 @@ export function Layout() {
           ) : (
             <button
               onClick={handleLogout}
-              className="mx-auto rounded-lg p-2.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="mx-auto rounded-lg p-2.5 text-muted-foreground hover:bg-muted dark:hover:bg-muted"
               title="Logout"
             >
               <LogOut className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function Layout() {
           collapsed ? 'ml-16' : 'ml-64'
         )}
       >
-        <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 dark:supports-[backdrop-filter]:bg-background/80">
           <div className="flex h-16 items-center justify-between px-6">
             <h1 className="text-xl font-semibold text-foreground">
               Admin Console

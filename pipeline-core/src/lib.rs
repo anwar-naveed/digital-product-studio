@@ -2,6 +2,7 @@
 //!
 pub mod api;
 pub mod audit;
+pub mod crypto;
 pub mod config;
 pub mod db;
 pub mod error;

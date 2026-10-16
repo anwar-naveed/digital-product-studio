@@ -23,8 +23,8 @@ export function useUpdateCredential() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ platform, ref }: { platform: Platform; ref: string }) => 
-      api.settings.updateCredential(platform, ref),
+    mutationFn: ({ platform, fields }: { platform: Platform; fields: Record<string, string> }) =>
+      api.settings.updateCredential(platform, fields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.credentials() });
     },

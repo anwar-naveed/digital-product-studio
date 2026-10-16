@@ -19,14 +19,14 @@ const PLATFORMS = [
 ] as const;
 
 const stateColors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  draft: 'bg-muted text-foreground dark:bg-gray-700 dark:text-gray-300',
   publishing: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   live: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   updating: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
   failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   suspended: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   delisting: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  delisted: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400',
+  delisted: 'bg-muted text-foreground dark:bg-gray-700 dark:text-gray-400',
 };
 
 const publishSchema = z.object({
@@ -106,15 +106,15 @@ function ActionDialog({ type, productId, productTitle, listing, onClose }: Actio
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+      <div className="w-full max-w-md bg-card rounded-lg shadow-xl p-6">
         <h2 className="text-xl font-semibold mb-2">{titles[type]}</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">{productTitle}</p>
+        <p className="text-muted-foreground mb-4">{productTitle}</p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Platform</label>
             <select
               {...register('platform')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+              className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
             >
               {PLATFORMS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
@@ -127,7 +127,7 @@ function ActionDialog({ type, productId, productTitle, listing, onClose }: Actio
               <label className="block text-sm font-medium mb-1">License Tier (optional)</label>
               <select
                 {...register('license_tier')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
               >
                 <option value="">Use product default</option>
                 <option value="personal">Personal</option>
@@ -144,10 +144,10 @@ function ActionDialog({ type, productId, productTitle, listing, onClose }: Actio
                 {...register('base_price')}
                 type="number"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-border rounded-md bg-white dark:bg-gray-700"
                 placeholder="29.99"
               />
-              {(errors as any).base_price && <p className="text-red-500 text-sm mt-1">{(errors as any).base_price.message}</p>}
+              {(errors as any).base_price && <p className="text-destructive text-sm mt-1">{(errors as any).base_price.message}</p>}
             </div>
           )}
 
@@ -155,7 +155,7 @@ function ActionDialog({ type, productId, productTitle, listing, onClose }: Actio
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-4 py-2 border rounded-md text-sm hover:bg-accent"
             >
               Cancel
             </button>
@@ -210,14 +210,14 @@ export function ListingsPage() {
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load listings</div>;
+    return <div className="text-destructive">Failed to load listings</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Listings</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage platform listings and pricing</p>
+        <h1 className="text-3xl font-bold text-foreground">Listings</h1>
+        <p className="text-muted-foreground mt-1">Manage platform listings and pricing</p>
       </div>
 
       <Card>
@@ -225,37 +225,37 @@ export function ListingsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-gray-50 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Platform</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">State</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Platform ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Updated</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                <tr className="border-b bg-muted">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Platform</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">State</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Platform ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Updated</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {data?.items?.map((listing) => {
                   const product = productsData?.items.find((p) => p.id === listing.product_id);
                   return (
-                    <tr key={listing.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                    <tr key={listing.id} className="hover:bg-accent">
+                      <td className="px-6 py-4 font-medium text-foreground">
                         {product?.title ?? listing.product_id.slice(0, 8)}
                       </td>
-                      <td className="px-6 py-4 capitalize text-gray-600 dark:text-gray-300">
+                      <td className="px-6 py-4 capitalize text-muted-foreground">
                         {listing.platform.replace('-', ' ')}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColors[listing.state] ?? 'bg-gray-100 text-gray-800'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stateColors[listing.state] ?? 'bg-muted text-foreground'}`}>
                           {listing.state}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-900 dark:text-white">{formatCurrency(listing.price)}</td>
-                      <td className="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">
+                      <td className="px-6 py-4 text-foreground">{formatCurrency(listing.price)}</td>
+                      <td className="px-6 py-4 font-mono text-sm text-muted-foreground">
                         {listing.platform_listing_id || '—'}
                       </td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{formatDateTime(listing.updated_at)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{formatDateTime(listing.updated_at)}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {listing.state === 'draft' && (
@@ -297,7 +297,7 @@ export function ListingsPage() {
                 })}
                 {(!data?.items.length) && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                       No listings found. Create products and publish them to platforms.
                     </td>
                   </tr>
