@@ -32,7 +32,7 @@ jobs:
   core:
     runs-on: ubuntu-latest
     outputs:
-      core_image: ${{ steps.tag.outputs.image }}
+      build_date: ${{ steps.tag.outputs.date }}
     steps:
       - uses: actions/checkout@v4
       - name: Check secrets
@@ -49,9 +49,10 @@ jobs:
       - name: Compute tag
         id: tag
         run: |
-          TAG="dps-core-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          DATE=$(date -u +%Y%m%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          TAG="dps-core-$DATE-${GITHUB_SHA::7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
       - name: Build + push pipeline-core
         uses: docker/build-push-action@v6
         with:
@@ -67,7 +68,7 @@ jobs:
   worker:
     runs-on: ubuntu-latest
     outputs:
-      worker_image: ${{ steps.tag.outputs.image }}
+      build_date: ${{ steps.tag.outputs.date }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -80,9 +81,10 @@ jobs:
       - name: Compute tag
         id: tag
         run: |
-          TAG="dps-worker-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          DATE=$(date -u +%Y%m%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          TAG="dps-worker-$DATE-${GITHUB_SHA::7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
       - name: Build + push pipeline-worker
         uses: docker/build-push-action@v6
         with:
@@ -98,7 +100,7 @@ jobs:
   ui:
     runs-on: ubuntu-latest
     outputs:
-      ui_image: ${{ steps.tag.outputs.image }}
+      build_date: ${{ steps.tag.outputs.date }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -111,9 +113,10 @@ jobs:
       - name: Compute tag
         id: tag
         run: |
-          TAG="dps-ui-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
+          DATE=$(date -u +%Y%m%d)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          TAG="dps-ui-$DATE-${GITHUB_SHA::7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "image=${IMAGE_REPO}:$TAG" >> "$GITHUB_OUTPUT"
       - name: Build + push admin-ui
         uses: docker/build-push-action@v6
         with:
@@ -199,14 +202,19 @@ jobs:
         with:
           ref: main
       - name: Update .env with pinned image refs
+        # NOTE: job outputs containing the Docker Hub username are masked to
+        # empty by GitHub's secret masking (the username IS a secret). So the
+        # pins are reconstructed here from the literal repo + the run SHA —
+        # the exact tags the core/worker/ui jobs pushed.
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase origin main
-          sed -i "s|^CORE_IMAGE=.*|CORE_IMAGE=${{ needs.core.outputs.core_image }}|" .env
-          sed -i "s|^WORKER_IMAGE=.*|WORKER_IMAGE=${{ needs.worker.outputs.worker_image }}|" .env
-          sed -i "s|^UI_IMAGE=.*|UI_IMAGE=${{ needs.ui.outputs.ui_image }}|" .env
-          sed -i "s|^TOOL_IMAGE_PREFIX=.*|TOOL_IMAGE_PREFIX=${{ env.IMAGE_REPO }}:dps-|" .env
+          SHA7=${GITHUB_SHA::7}
+          sed -i "s|^CORE_IMAGE=.*|CORE_IMAGE=navanwar021/work-repo:dps-core-${{ needs.core.outputs.build_date }}-$SHA7|" .env
+          sed -i "s|^WORKER_IMAGE=.*|WORKER_IMAGE=navanwar021/work-repo:dps-worker-${{ needs.worker.outputs.build_date }}-$SHA7|" .env
+          sed -i "s|^UI_IMAGE=.*|UI_IMAGE=navanwar021/work-repo:dps-ui-${{ needs.ui.outputs.build_date }}-$SHA7|" .env
+          sed -i "s|^TOOL_IMAGE_PREFIX=.*|TOOL_IMAGE_PREFIX=navanwar021/work-repo:dps-|" .env
           git add .env
           git commit -m "release: pin images for ${{ github.sha }} [skip ci]" || echo "nothing to commit"
           git push origin main
@@ -214,7 +222,7 @@ jobs:
         run: |
           echo "### Images released to work-repo" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          echo "CORE_IMAGE=${{ needs.core.outputs.core_image }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "WORKER_IMAGE=${{ needs.worker.outputs.worker_image }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "UI_IMAGE=${{ needs.ui.outputs.ui_image }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "CORE_IMAGE=navanwar021/work-repo:dps-core-${{ needs.core.outputs.build_date }}-$SHA7" >> "$GITHUB_STEP_SUMMARY"
+          echo "WORKER_IMAGE=navanwar021/work-repo:dps-worker-${{ needs.worker.outputs.build_date }}-$SHA7" >> "$GITHUB_STEP_SUMMARY"
+          echo "UI_IMAGE=navanwar021/work-repo:dps-ui-${{ needs.ui.outputs.build_date }}-$SHA7" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
