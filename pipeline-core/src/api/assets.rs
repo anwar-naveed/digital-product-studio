@@ -78,10 +78,15 @@ pub async fn get_asset(
         return Err(AppError::Forbidden("admin role required".into()));
     }
 
-    // Jail the key: no traversal, designs/ namespace only
+    // Jail the key: no traversal, and only the pipeline's own key shapes —
+    // "<design-uuid>/<file>" (raw variant outputs) or "designs/<...>".
     let key = key.trim_start_matches('/');
-    if key.contains("..") || !key.starts_with("designs/") {
-        return Err(AppError::Forbidden("key outside designs namespace".into()));
+    let valid_shape = key.starts_with("designs/")
+        || (key.split('/').count() == 2
+            && key.split('/').next().unwrap_or("").len() == 36
+            && !key.contains(".."));
+    if !valid_shape {
+        return Err(AppError::Forbidden("key outside pipeline namespace".into()));
     }
 
     let result = state
