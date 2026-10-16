@@ -186,10 +186,11 @@ fn build_container_command(
         JobTool::PublishListing => format!("{}publish-listing:latest", prefix),
     };
     
-    // Build the actual tool command
+    // Build the actual tool command. The tool name is NOT injected as a
+    // positional: container entrypoints already ARE the tool (image
+    // entrypoint), and vendor CLIs reject the extra positional
+    // (photocraft-cli exit 2, our wrapper exit 2). Subcommand stays.
     let mut tool_cmd = Vec::new();
-    tool_cmd.push(serde_json::to_value(spec.tool).unwrap().as_str().unwrap().to_string());
-    
     tool_cmd.push(spec.subcommand.clone());
     
     // Add params-file argument (Vector 1 mitigation)

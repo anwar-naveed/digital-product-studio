@@ -20,15 +20,24 @@ import cf_image_client  # noqa: E402
 
 
 def main() -> int:
+    # The exec.rs harness prepends the tool name as the first positional
+    # (argv contract shared with photocraft/vectorcraft): normalize it away
+    # before argparse — accepts both `cf-image-gen run ...` and `run ...`.
+    argv = sys.argv[1:]
+    subcommand = "run"
+    if argv and argv[0] == "cf-image-gen":
+        argv.pop(0)
+    if argv and argv[0] in ("run", "health"):
+        subcommand = argv.pop(0)
+
     ap = argparse.ArgumentParser(prog="cf-image-gen")
-    ap.add_argument("subcommand", choices=["run", "health"], nargs="?", default="run")
     ap.add_argument("--params-file", required=False)
     ap.add_argument("--automation-read-root", default="/workspace/read")
     ap.add_argument("--automation-write-root", default="/workspace/write")
     ap.add_argument("--out", action="append", default=[])
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
-    if args.subcommand == "health":
+    if subcommand == "health":
         print(json.dumps({"ok": True}))
         return 0
 
