@@ -256,12 +256,12 @@ pub async fn approve_curation(
     sqlx::query!(
         r#"
         INSERT INTO jobs (id, run_id, tool, command_spec, status, attempts, queued_at)
-        VALUES ($1, $2, 'product_assembly', $3, 'queued', 0, $4)
+        VALUES ($1, $2, 'product-assembly', $3, 'queued', 0, $4)
         "#,
         assembly_job_id,
         variant.run_id,
         serde_json::json!({
-            "tool": "product_assembly",
+            "tool": "product-assembly",
             "subcommand": "run",
             "args": {
                 "design_id": variant.design_id,

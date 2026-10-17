@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO jobs (id, run_id, tool, command_spec, status, attempts, queued_at)\n        VALUES ($1, $2, 'product-assembly', $3, 'queued', 0, $4)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a38b9bc6713022a7dcb51952c2b4b4e91918ed9b0c0decf319ff28fd462c8805"
+}
