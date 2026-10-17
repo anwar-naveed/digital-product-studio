@@ -1,0 +1,17 @@
+# product-assembly sandbox image: curated variant -> print-ready bundle.
+# BUILT ONLY BY GITHUB ACTIONS (HARD CLAUSE 2). Stdlib + Pillow, no network
+# at runtime (worker spawns it with network "none").
+FROM python:3.12-slim
+
+RUN groupadd -g 1000 appgroup && useradd -u 1000 -g appgroup -s /usr/sbin/nologin -m appuser
+
+RUN pip install --no-cache-dir "Pillow>=10.4"
+
+COPY product_assembly_entry.py /usr/local/lib/product-assembly/product_assembly_entry.py
+RUN chmod +x /usr/local/lib/product-assembly/product_assembly_entry.py \
+ && ln -s /usr/local/lib/product-assembly/product_assembly_entry.py /usr/local/bin/product-assembly
+
+USER 1000:1000
+WORKDIR /workspace
+
+ENTRYPOINT ["/usr/local/bin/product-assembly"]

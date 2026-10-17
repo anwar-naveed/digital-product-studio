@@ -143,6 +143,14 @@ impl Worker {
         let job = pipeline_core::queue::mark_running(&self.pool, job.id).await?;
         info!("Job {} marked as running", job.id);
 
+        // 3.5 STAGE INPUTS — assembly jobs read curated S3 objects, but the
+        // tool sandbox runs network-less; pull inputs onto the volume first.
+        if let Some(post) = &self.post {
+            if let Err(e) = postprocess::stage_job_inputs(&job, post).await {
+                warn!("input staging failed for {}: {:?}", job.id, e);
+            }
+        }
+
         // 4. EXECUTE - spawn container and run command
         let receipt = self.execute_job(&job).await;
 

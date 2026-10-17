@@ -1,6 +1,7 @@
 //! Post-job pipeline advancement: upload outputs to object storage and
 //! advance run/design state so curation + the UI reflect real progress.
 
+use pipeline_core::db::entities::Job;
 use pipeline_core::s3::S3Client;
 use sqlx::PgPool;
 use std::collections::HashMap;
@@ -20,6 +21,48 @@ impl std::fmt::Debug for PostProcessConfig {
             .field("s3_client", &self.s3_client.is_some())
             .finish()
     }
+}
+
+/// Before a sandboxed job runs: stage any S3 inputs it declares in its
+/// command-spec args (product_assembly jobs carry `curated_key`). Tools run
+/// with network "none", so their inputs must be placed on the shared volume
+/// read side first. Idempotent — skips keys already staged.
+pub async fn stage_job_inputs(job: &Job, cfg: &PostProcessConfig) -> Result<(), anyhow::Error> {
+    let Some(s3) = cfg.s3_client.as_ref() else {
+        return Ok(()); // s3-integration disabled: nothing to stage
+    };
+    let curated_key = match job
+        .command_spec
+        .get("args")
+        .and_then(|a| a.get("curated_key"))
+        .and_then(|v| v.as_str())
+    {
+        Some(k) if !k.is_empty() => k.to_string(),
+        _ => return Ok(()), // not an input-carrying job (e.g. cf-image-gen)
+    };
+
+    let dest = cfg
+        .staging_root
+        .join("read")
+        .join("inputs")
+        .join(&curated_key);
+    if tokio::fs::try_exists(&dest).await.unwrap_or(false) {
+        return Ok(());
+    }
+    if let Some(parent) = dest.parent() {
+        tokio::fs::create_dir_all(parent).await?;
+    }
+    let result = s3
+        .get(&curated_key)
+        .await
+        .map_err(|e| anyhow::anyhow!("s3 get {}: {}", curated_key, e))?;
+    let data = result
+        .bytes()
+        .await
+        .map_err(|e| anyhow::anyhow!("s3 read {}: {}", curated_key, e))?;
+    tokio::fs::write(&dest, &data).await?;
+    tracing::info!(key = %curated_key, "staged assembly input for job {}", job.id);
+    Ok(())
 }
 
 /// After a cf-image-gen job completes: read the produced files from the
@@ -53,6 +96,23 @@ pub async fn ingest_design_outputs(
         .map(|s| vec![s.to_string()])
         .unwrap_or_default();
 
+    // Assembly jobs (product_assembly) declare their outputs at the spec
+    // level instead of args.output. They upload bundles but are NOT design
+    // variants, so the design_variants insert is skipped for them.
+    let is_assembly = args.get("curated_key").map(|_| true).unwrap_or(false);
+    let outputs = if outputs.is_empty() {
+        let eo: Option<serde_json::Value> = sqlx::query_scalar!(
+            r#"SELECT command_spec->'expected_outputs' as "eo!: serde_json::Value" FROM jobs WHERE id = $1"#,
+            job_id
+        )
+        .fetch_optional(pool)
+        .await?;
+        eo.and_then(|v| serde_json::from_value::<Vec<String>>(v).ok())
+            .unwrap_or_default()
+    } else {
+        outputs
+    };
+
     for rel in outputs {
         if rel.is_empty() { continue; }
         let path = cfg.staging_root.join("write").join(&rel);
@@ -66,6 +126,12 @@ pub async fn ingest_design_outputs(
         let mut meta = HashMap::new();
         meta.insert("sha256".to_string(), sha.clone());
         s3.put(&s3_key, data, meta).await?;
+
+        if is_assembly {
+            // bundles are products, not variants — skip the variants table.
+            tracing::info!(key = %s3_key, "uploaded assembly bundle");
+            continue;
+        }
 
         sqlx::query!(
             "INSERT INTO design_variants (design_id, kind, s3_key, sha256)

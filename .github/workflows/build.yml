@@ -177,6 +177,15 @@ jobs:
           tags: ${{ env.IMAGE_REPO }}:dps-cf-image-gen-0.7.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Build + push product-assembly
+        uses: docker/build-push-action@v6
+        with:
+          context: deploy
+          file: deploy/Dockerfile.assembly
+          push: true
+          tags: ${{ env.IMAGE_REPO }}:dps-product-assembly-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   test:
     # Runs the test suites INSIDE ephemeral containers (HARD CLAUSE 3)
