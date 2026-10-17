@@ -79,11 +79,19 @@ pub async fn get_asset(
     }
 
     // Jail the key: no traversal, and only the pipeline's own key shapes —
-    // "<design-uuid>/<file>" (raw variant outputs) or "designs/<...>".
+    // "products/<uuid>/bundle.zip" (assembled product bundles),
+    // "curated/<...>" (approved variants), "<design-uuid>/<file>" (raw
+    // variant outputs) or "designs/<...>".
     let key = key.trim_start_matches('/');
+    let segs: Vec<&str> = key.split('/').collect();
     let valid_shape = key.starts_with("designs/")
-        || (key.split('/').count() == 2
-            && key.split('/').next().unwrap_or("").len() == 36
+        || key.starts_with("curated/")
+        || (segs.len() == 3
+            && segs[0] == "products"
+            && segs[1].len() == 36
+            && segs[2] == "bundle.zip")
+        || (segs.len() == 2
+            && segs[0].len() == 36
             && !key.contains(".."));
     if !valid_shape {
         return Err(AppError::Forbidden("key outside pipeline namespace".into()));

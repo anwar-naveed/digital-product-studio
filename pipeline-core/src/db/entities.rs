@@ -187,7 +187,7 @@ pub struct Curation {
 /// License tier enum - matches CHECK constraint and R15 pricing ladder
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
-#[sqlx(rename_all = "snake_case")]
+#[sqlx(rename_all = "snake_case", type_name = "text")]
 pub enum LicenseTier {
     Personal,
     SmallCommercial,
