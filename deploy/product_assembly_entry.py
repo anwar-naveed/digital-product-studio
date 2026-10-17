@@ -170,8 +170,11 @@ def merge_into_bundle(out_path_abs: str, pack: dict, params: dict) -> dict:
     existing_manifest = None
     written: list[str] = []
 
+    # Temp file MUST be on the same filesystem as the bundle — os.replace
+    # is atomic only within one device (tmpfs -> volume is EXDEV).
+    bundle_dir = os.path.dirname(out_path_abs)
     with tempfile.NamedTemporaryFile(
-        prefix="bundle-", suffix=".zip", delete=False
+        prefix="bundle-", suffix=".zip", delete=False, dir=bundle_dir
     ) as tmp:
         tmp_path = tmp.name
 
