@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO products (sku, title, license_tier, price, s3_prefix)\n        VALUES ($1, $2, $3, $4, $5)\n        RETURNING id, sku, title, license_tier as \"license_tier: LicenseTier\", price, s3_prefix, created_at\n        ",
+  "query": "\n        INSERT INTO products (sku, title, license_tier, price, s3_prefix, listing_metadata)\n        VALUES ($1, $2, $3, $4, $5, $6)\n        RETURNING id, sku, title, license_tier as \"license_tier: LicenseTier\", price, s3_prefix, created_at,\n                  listing_metadata,\n                  (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id\n                    WHERE pi.product_id = products.id ORDER BY pi.position LIMIT 1) as \"cover_s3_key\"\n        ",
   "describe": {
     "columns": [
       {
@@ -79,6 +79,23 @@
             "name": "created_at"
           }
         }
+      },
+      {
+        "ordinal": 7,
+        "name": "listing_metadata",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "products",
+            "name": "listing_metadata"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "cover_s3_key",
+        "type_info": "Text",
+        "origin": "Expression"
       }
     ],
     "parameters": {
@@ -87,7 +104,8 @@
         "Text",
         "Text",
         "Numeric",
-        "Text"
+        "Text",
+        "Jsonb"
       ]
     },
     "nullable": [
@@ -97,8 +115,10 @@
       false,
       false,
       false,
-      false
+      false,
+      true,
+      null
     ]
   },
-  "hash": "66f671d4c40cceb3acb57eb40f6b90b7440fe82756e76d1b259270adf3931042"
+  "hash": "513b65b66fa9b204bb021706e4c6cfc0cc71a60c6c57fc2d541f3f70961e3ec4"
 }

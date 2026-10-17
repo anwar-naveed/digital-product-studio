@@ -170,6 +170,27 @@ export interface ProductItemResponse {
   variant_id: string;
   position: number;
   created_at: string;
+  s3_key?: string | null;
+  design_id?: string | null;
+  run_id?: string | null;
+  niche_id?: string | null;
+}
+
+export interface ProductListingMetadata {
+  etsy?: {
+    title?: string;
+    price_usd?: number;
+    tags?: string[];
+    description?: string;
+    type?: string;
+  };
+  lemonsqueezy?: {
+    name?: string;
+    price_usd?: number;
+    description?: string;
+    license?: string;
+  };
+  [key: string]: unknown;
 }
 
 export interface ProductResponse {
@@ -180,6 +201,8 @@ export interface ProductResponse {
   price: string; // Decimal as string
   s3_prefix: string;
   created_at: string;
+  listing_metadata?: ProductListingMetadata | null;
+  cover_s3_key?: string | null;
 }
 
 export interface CreateProductItemRequest {
@@ -194,6 +217,7 @@ export interface CreateProductRequest {
   price: string;
   s3_prefix: string;
   items?: CreateProductItemRequest[];
+  listing_metadata?: ProductListingMetadata;
 }
 
 export interface UpdateProductRequest {
@@ -202,6 +226,7 @@ export interface UpdateProductRequest {
   price?: string;
   s3_prefix?: string;
   items?: CreateProductItemRequest[];
+  listing_metadata?: ProductListingMetadata;
 }
 
 export interface ListProductsQuery {

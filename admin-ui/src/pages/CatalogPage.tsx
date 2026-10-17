@@ -4,11 +4,13 @@ import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '../hooks/u
 import { Card, CardContent } from '../components/ui/Card';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { formatDate, formatCurrency } from '../lib/utils';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Package, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { assetUrl } from '../api/client';
+import { ProductDetailDialog } from '../components/ProductDetailDialog';
 
 const LICENSE_TIERS = [
   { value: 'personal', label: 'Personal ($5-10)' },
@@ -157,9 +159,6 @@ function ProductDialog({ product, onClose }: ProductDialogProps) {
   );
 }
 
-// Need to import Loader2
-import { Loader2 } from 'lucide-react';
-
 const tierColors: Record<string, string> = {
   personal: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   small_commercial: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -169,8 +168,9 @@ const tierColors: Record<string, string> = {
 export function CatalogPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductDialogProps['product'] | null>(null);
+  const [detailProduct, setDetailProduct] = useState<ProductDialogProps['product'] & { listing_metadata?: unknown; cover_s3_key?: string | null } | null>(null);
   const deleteProduct = useDeleteProduct();
-  
+
   const { data, isLoading, error } = useProducts();
 
   const handleCreate = () => {
@@ -205,72 +205,84 @@ export function CatalogPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Catalog</h1>
-          <p className="text-muted-foreground mt-1">Manage product bundles with 3-tier pricing</p>
+          <h1 className="text-3xl font-bold text-foreground">Final Products</h1>
+          <p className="text-muted-foreground mt-1">
+            Assembled, publish-ready product sets — click any product to preview prints, package contents and listing metadata
+          </p>
         </div>
         <button onClick={handleCreate} className="btn-primary">
           <Plus className="h-4 w-4 mr-2" /> Add Product
         </button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">SKU</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">License Tier</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">S3 Prefix</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {data?.items?.map((product) => (
-                  <tr key={product.id} className="hover:bg-accent">
-                    <td className="px-6 py-4 font-mono text-sm text-foreground">{product.sku}</td>
-                    <td className="px-6 py-4 font-medium text-foreground">{product.title}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tierColors[product.license_tier] ?? 'bg-muted text-foreground'}`}>
-                        {product.license_tier.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-foreground">{formatCurrency(product.price)}</td>
-                    <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{product.s3_prefix}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{formatDate(product.created_at)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="p-2 text-gray-500 hover:text-primary hover:bg-accent rounded-md"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="p-2 text-gray-500 hover:text-destructive hover:bg-accent rounded-md"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {(!data?.items.length) && (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                      No products found. Create your first product bundle to get started.
-                    </td>
-                  </tr>
+      {data?.items?.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground">No products yet</h3>
+            <p className="text-muted-foreground mt-1">
+              Approve variants in Curation to assemble bundles, then register the set here.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {data?.items?.map((product) => (
+            <div
+              key={product.id}
+              className="border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-all cursor-pointer group relative"
+              onClick={() => setDetailProduct(product)}
+            >
+              <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                {product.cover_s3_key ? (
+                  <img
+                    src={assetUrl(product.cover_s3_key)}
+                    alt={product.title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="h-10 w-10 text-muted-foreground" />
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${tierColors[product.license_tier] ?? 'bg-muted text-foreground'}`}>
+                  {product.license_tier.replace('_', ' ')}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(product.id);
+                  }}
+                  className="absolute top-2 left-2 p-1.5 bg-black/50 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  title="Delete product"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="p-4 space-y-2">
+                <h3 className="font-medium text-foreground text-sm line-clamp-2 min-h-[2.5rem]">{product.title}</h3>
+                <div className="flex items-center justify-between">
+                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{product.sku}</code>
+                  <span className="text-lg font-bold text-foreground">{formatCurrency(product.price)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{formatDate(product.created_at)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detailProduct && (
+        <ProductDetailDialog
+          product={detailProduct as never}
+          onClose={() => setDetailProduct(null)}
+          onEdit={(p: ProductDialogProps['product']) => {
+            setDetailProduct(null);
+            handleEdit(p);
+          }}
+        />
+      )}
 
       {showDialog && (
         <ProductDialog

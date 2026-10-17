@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        UPDATE products\n        SET title = $1, license_tier = $2, price = $3, s3_prefix = $4\n        WHERE id = $5\n        RETURNING id, sku, title, license_tier as \"license_tier: LicenseTier\", price, s3_prefix, created_at\n        ",
+  "query": "\n        UPDATE products\n        SET title = $1, license_tier = $2, price = $3, s3_prefix = $4, listing_metadata = $5\n        WHERE id = $6\n        RETURNING id, sku, title, license_tier as \"license_tier: LicenseTier\", price, s3_prefix, created_at,\n                  listing_metadata,\n                  (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id\n                    WHERE pi.product_id = products.id ORDER BY pi.position LIMIT 1) as \"cover_s3_key\"\n        ",
   "describe": {
     "columns": [
       {
@@ -79,6 +79,23 @@
             "name": "created_at"
           }
         }
+      },
+      {
+        "ordinal": 7,
+        "name": "listing_metadata",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "products",
+            "name": "listing_metadata"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "cover_s3_key",
+        "type_info": "Text",
+        "origin": "Expression"
       }
     ],
     "parameters": {
@@ -87,6 +104,7 @@
         "Text",
         "Numeric",
         "Text",
+        "Jsonb",
         "Uuid"
       ]
     },
@@ -97,8 +115,10 @@
       false,
       false,
       false,
-      false
+      false,
+      true,
+      null
     ]
   },
-  "hash": "f08bc8a9f556ecdb7fdf4b79c1d4826ec0ac70b916921b25067becd0ed7b7a93"
+  "hash": "22ba46f4894869f7f1bf414dd659962eae69d465286b1fec833568b2942920b9"
 }

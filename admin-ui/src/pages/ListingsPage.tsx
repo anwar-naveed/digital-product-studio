@@ -5,11 +5,12 @@ import { useProducts } from '../hooks/useProducts';
 import { Card, CardContent } from '../components/ui/Card';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { formatDateTime, formatCurrency } from '../lib/utils';
-import { Send, X, DollarSign, Loader2, RefreshCw } from 'lucide-react';
+import { Send, X, DollarSign, Loader2, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { assetUrl } from '../api/client';
 
 const PLATFORMS = [
   { value: 'etsy', label: 'Etsy' },
@@ -240,8 +241,24 @@ export function ListingsPage() {
                   const product = productsData?.items.find((p) => p.id === listing.product_id);
                   return (
                     <tr key={listing.id} className="hover:bg-accent">
-                      <td className="px-6 py-4 font-medium text-foreground">
-                        {product?.title ?? listing.product_id.slice(0, 8)}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {product?.cover_s3_key ? (
+                            <img
+                              src={assetUrl(product.cover_s3_key)}
+                              alt={product.title}
+                              className="w-12 h-12 rounded object-cover border border-border shrink-0"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center shrink-0">
+                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span className="font-medium text-foreground">
+                            {product?.title ?? listing.product_id.slice(0, 8)}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 capitalize text-muted-foreground">
                         {listing.platform.replace('-', ' ')}
@@ -297,8 +314,12 @@ export function ListingsPage() {
                 })}
                 {(!data?.items.length) && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                      No listings found. Create products and publish them to platforms.
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground">No platform listings yet.</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Add Etsy / Lemon Squeezy credentials in Settings → Credentials, then publish a product from the Final Products page.
+                      </p>
                     </td>
                   </tr>
                 )}

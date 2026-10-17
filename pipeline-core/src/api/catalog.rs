@@ -46,6 +46,13 @@ pub struct ProductItemResponse {
     pub variant_id: Uuid,
     pub position: i32,
     pub created_at: DateTime<Utc>,
+    /// Resolved from design_variants — raw preview image key for the UI
+    pub s3_key: Option<String>,
+    /// Design the variant belongs to (assembly bundle key: products/<design_id>/bundle.zip)
+    pub design_id: Option<Uuid>,
+    /// Origin run + niche for traceability in the product view
+    pub run_id: Option<Uuid>,
+    pub niche_id: Option<Uuid>,
 }
 
 /// Product response DTO
@@ -58,6 +65,10 @@ pub struct ProductResponse {
     pub price: Decimal,
     pub s3_prefix: String,
     pub created_at: DateTime<Utc>,
+    /// Draft per-platform listing metadata (Etsy/LemonSqueezy) for publish preview
+    pub listing_metadata: Option<serde_json::Value>,
+    /// s3 key of the first item's variant image — cover thumbnail for grid views
+    pub cover_s3_key: Option<String>,
 }
 
 /// Product creation request DTO (R15: 3-tier pricing ladder)
@@ -71,6 +82,8 @@ pub struct CreateProductRequest {
     pub price: Decimal,
     pub s3_prefix: String,
     pub items: Vec<CreateProductItemRequest>,
+    #[serde(default)]
+    pub listing_metadata: Option<serde_json::Value>,
 }
 
 /// Product item creation request
@@ -89,6 +102,7 @@ pub struct UpdateProductRequest {
     pub price: Option<Decimal>,
     pub s3_prefix: Option<String>,
     pub items: Option<Vec<CreateProductItemRequest>>,
+    pub listing_metadata: Option<serde_json::Value>,
 }
 
 /// Product list response
@@ -114,10 +128,13 @@ pub async fn list_products(
         sqlx::query_as!(
             ProductRow,
             r#"
-            SELECT id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at
-            FROM products
-            WHERE license_tier = $1
-            ORDER BY created_at DESC
+            SELECT p.id, p.sku, p.title, p.license_tier as "license_tier: LicenseTier", p.price, p.s3_prefix, p.created_at,
+                   p.listing_metadata,
+                   (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                     WHERE pi.product_id = p.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
+            FROM products p
+            WHERE p.license_tier = $1
+            ORDER BY p.created_at DESC
             LIMIT $2 OFFSET $3
             "#,
             license_tier,
@@ -130,9 +147,12 @@ pub async fn list_products(
         sqlx::query_as!(
             ProductRow,
             r#"
-            SELECT id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at
-            FROM products
-            ORDER BY created_at DESC
+            SELECT p.id, p.sku, p.title, p.license_tier as "license_tier: LicenseTier", p.price, p.s3_prefix, p.created_at,
+                   p.listing_metadata,
+                   (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                     WHERE pi.product_id = p.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
+            FROM products p
+            ORDER BY p.created_at DESC
             LIMIT $1 OFFSET $2
             "#,
             limit,
@@ -175,15 +195,19 @@ pub async fn create_product(
     let product = sqlx::query_as!(
         ProductRow,
         r#"
-        INSERT INTO products (sku, title, license_tier, price, s3_prefix)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at
+        INSERT INTO products (sku, title, license_tier, price, s3_prefix, listing_metadata)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at,
+                  listing_metadata,
+                  (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                    WHERE pi.product_id = products.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
         "#,
         payload.sku,
         payload.title,
         license_tier as LicenseTier,
         payload.price,
-        payload.s3_prefix
+        payload.s3_prefix,
+        payload.listing_metadata
     )
     .fetch_one(&state.db)
     .await?;
@@ -229,9 +253,12 @@ pub async fn get_product(
     let product = sqlx::query_as!(
         ProductRow,
         r#"
-        SELECT id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at
-        FROM products
-        WHERE id = $1
+        SELECT p.id, p.sku, p.title, p.license_tier as "license_tier: LicenseTier", p.price, p.s3_prefix, p.created_at,
+               p.listing_metadata,
+               (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                 WHERE pi.product_id = p.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
+        FROM products p
+        WHERE p.id = $1
         "#,
         id
     )
@@ -239,14 +266,21 @@ pub async fn get_product(
     .await?
     .ok_or(AppError::NotFound("Product not found".into()))?;
 
-    // Fetch product items
+    // Fetch product items joined to variant + design for previews & origin
     let items = sqlx::query_as!(
         ProductItemRow,
         r#"
-        SELECT id, product_id, variant_id, position, created_at
-        FROM product_items
-        WHERE product_id = $1
-        ORDER BY position
+        SELECT pi.id, pi.product_id, pi.variant_id, pi.position, pi.created_at,
+               dv.s3_key,
+               dv.design_id,
+               d.run_id,
+               pr.niche_id
+        FROM product_items pi
+        LEFT JOIN design_variants dv ON dv.id = pi.variant_id
+        LEFT JOIN designs d ON d.id = dv.design_id
+        LEFT JOIN production_runs pr ON pr.id = d.run_id
+        WHERE pi.product_id = $1
+        ORDER BY pi.position
         "#,
         id
     )
@@ -270,7 +304,11 @@ pub async fn update_product(
 
     let existing = sqlx::query_as!(
         ProductRow,
-        "SELECT id, sku, title, license_tier as \"license_tier: LicenseTier\", price, s3_prefix, created_at FROM products WHERE id = $1",
+        r#"SELECT p.id, p.sku, p.title, p.license_tier as "license_tier: LicenseTier", p.price, p.s3_prefix, p.created_at,
+                  p.listing_metadata,
+                  (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                    WHERE pi.product_id = p.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
+           FROM products p WHERE p.id = $1"#,
         id
     )
     .fetch_optional(&state.db)
@@ -296,19 +334,24 @@ pub async fn update_product(
     };
     let price = payload.price.unwrap_or(existing.price);
     let s3_prefix = payload.s3_prefix.unwrap_or(existing.s3_prefix);
+    let listing_metadata = payload.listing_metadata.or(existing.listing_metadata);
 
     let product = sqlx::query_as!(
         ProductRow,
         r#"
         UPDATE products
-        SET title = $1, license_tier = $2, price = $3, s3_prefix = $4
-        WHERE id = $5
-        RETURNING id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at
+        SET title = $1, license_tier = $2, price = $3, s3_prefix = $4, listing_metadata = $5
+        WHERE id = $6
+        RETURNING id, sku, title, license_tier as "license_tier: LicenseTier", price, s3_prefix, created_at,
+                  listing_metadata,
+                  (SELECT dv.s3_key FROM product_items pi JOIN design_variants dv ON dv.id = pi.variant_id
+                    WHERE pi.product_id = products.id ORDER BY pi.position LIMIT 1) as "cover_s3_key"
         "#,
         title,
         license_tier as LicenseTier,
         price,
         s3_prefix,
+        listing_metadata,
         id
     )
     .fetch_one(&state.db)
@@ -415,6 +458,8 @@ struct ProductRow {
     price: Decimal,
     s3_prefix: String,
     created_at: DateTime<Utc>,
+    listing_metadata: Option<serde_json::Value>,
+    cover_s3_key: Option<String>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -424,6 +469,10 @@ struct ProductItemRow {
     variant_id: Uuid,
     position: i32,
     created_at: DateTime<Utc>,
+    s3_key: Option<String>,
+    design_id: Option<Uuid>,
+    run_id: Option<Uuid>,
+    niche_id: Option<Uuid>,
 }
 
 impl From<ProductRow> for ProductResponse {
@@ -436,6 +485,8 @@ impl From<ProductRow> for ProductResponse {
             price: row.price,
             s3_prefix: row.s3_prefix,
             created_at: row.created_at,
+            listing_metadata: row.listing_metadata,
+            cover_s3_key: row.cover_s3_key,
         }
     }
 }
@@ -448,6 +499,10 @@ impl From<ProductItemRow> for ProductItemResponse {
             variant_id: row.variant_id,
             position: row.position,
             created_at: row.created_at,
+            s3_key: row.s3_key,
+            design_id: row.design_id,
+            run_id: row.run_id,
+            niche_id: row.niche_id,
         }
     }
 }
