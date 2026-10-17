@@ -241,7 +241,7 @@ def main(argv: list[str]) -> int:
     run_p.add_argument("--automation-read-root", required=True)
     run_p.add_argument("--automation-write-root", required=True)
     run_p.add_argument("--out", required=True)
-    args = parser.parse_args(argv)
+    args, _unknown = parser.parse_known_args(argv)
 
     params = load_params(args.params_file)
     pack = build_variant_pack(params, args.automation_read_root)

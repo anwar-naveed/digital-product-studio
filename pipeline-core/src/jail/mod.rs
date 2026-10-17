@@ -87,7 +87,15 @@ pub fn validate_and_prepare(
 /// Validate root-level JobCommandSpec schema
 fn validate_root_schema(spec: &JobCommandSpec) -> Result<(), JailError> {
     // Tool must be one of the allowed tools
-    if !matches!(spec.tool, ValidatedJobTool::CfImageGen | ValidatedJobTool::PhotocraftCli | ValidatedJobTool::VectorcraftCli) {
+    if !matches!(
+        spec.tool,
+        ValidatedJobTool::CfImageGen
+            | ValidatedJobTool::PhotocraftCli
+            | ValidatedJobTool::VectorcraftCli
+            | ValidatedJobTool::WebhookProcessor
+            | ValidatedJobTool::ProductAssembly
+            | ValidatedJobTool::PublishListing
+    ) {
         return Err(JailError::RootSchema(format!("Unknown tool: {:?}", spec.tool)));
     }
     
@@ -134,6 +142,9 @@ fn get_subcommand_allowlist(tool: &ValidatedJobTool) -> Vec<&'static str> {
         ValidatedJobTool::CfImageGen => vec!["run", "batch", "info"],
         ValidatedJobTool::PhotocraftCli => vec!["run", "batch", "convert", "info", "commands", "mcp", "serve", "droplet"],
         ValidatedJobTool::VectorcraftCli => vec!["run", "batch", "convert", "info", "commands", "mcp", "serve", "droplet"],
+        ValidatedJobTool::WebhookProcessor => vec!["run"],
+        ValidatedJobTool::ProductAssembly => vec!["run"],
+        ValidatedJobTool::PublishListing => vec!["run", "publish"],
     }
 }
 
@@ -151,7 +162,19 @@ fn validate_tool_args(spec: &JobCommandSpec) -> Result<(), JailError> {
         ValidatedJobTool::CfImageGen => validate_cf_image_gen_args(obj),
         ValidatedJobTool::PhotocraftCli => validate_photocraft_args(obj),
         ValidatedJobTool::VectorcraftCli => validate_vectorcraft_args(obj),
+        ValidatedJobTool::ProductAssembly => validate_product_assembly_args(obj),
+        // webhook-processor / publish-listing carry free-form payloads; the
+        // global key/metachar checks above already constrain them.
+        ValidatedJobTool::WebhookProcessor | ValidatedJobTool::PublishListing => Ok(()),
     }
+}
+
+/// product-assembly args validation: curated input key must be declared.
+fn validate_product_assembly_args(obj: &serde_json::Map<String, serde_json::Value>) -> Result<(), JailError> {
+    if !obj.contains_key("curated_key") {
+        return Err(JailError::ToolArgs("product-assembly requires 'curated_key' field".to_string()));
+    }
+    Ok(())
 }
 
 /// cf-image-gen args validation

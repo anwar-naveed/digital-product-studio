@@ -44,6 +44,12 @@ pub enum ValidatedJobTool {
     PhotocraftCli,
     #[serde(rename = "vectorcraft-cli")]
     VectorcraftCli,
+    #[serde(rename = "webhook-processor")]
+    WebhookProcessor,
+    #[serde(rename = "product-assembly")]
+    ProductAssembly,
+    #[serde(rename = "publish-listing")]
+    PublishListing,
 }
 
 impl From<JobTool> for ValidatedJobTool {
@@ -52,7 +58,9 @@ impl From<JobTool> for ValidatedJobTool {
             JobTool::CfImageGen => ValidatedJobTool::CfImageGen,
             JobTool::PhotocraftCli => ValidatedJobTool::PhotocraftCli,
             JobTool::VectorcraftCli => ValidatedJobTool::VectorcraftCli,
-            _ => panic!("Unsupported job tool for command spec: {:?}", tool),
+            JobTool::WebhookProcessor => ValidatedJobTool::WebhookProcessor,
+            JobTool::ProductAssembly => ValidatedJobTool::ProductAssembly,
+            JobTool::PublishListing => ValidatedJobTool::PublishListing,
         }
     }
 }
